@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo List</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="app__header">
+        <h1>Minhas Tarefas</h1>
+        <p>Organize seu dia com foco no que importa.</p>
+      </header>
+
+      <form id="task-form" class="task-form" aria-label="Adicionar tarefa">
+        <input
+          id="task-input"
+          name="task"
+          type="text"
+          maxlength="120"
+          placeholder="Digite uma tarefa"
+          required
+        />
+        <button type="submit">Adicionar</button>
+      </form>
+
+      <section class="toolbar" aria-label="Filtros">
+        <div class="filters" role="group" aria-label="Filtrar tarefas">
+          <button type="button" class="filter-btn is-active" data-filter="all">Todas</button>
+          <button type="button" class="filter-btn" data-filter="active">Pendentes</button>
+          <button type="button" class="filter-btn" data-filter="completed">Concluídas</button>
+        </div>
+        <p id="task-count" class="task-count">0 pendentes</p>
+      </section>
+
+      <ul id="task-list" class="task-list" aria-live="polite"></ul>
+      <p id="empty-state" class="empty-state">Nenhuma tarefa para exibir.</p>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
