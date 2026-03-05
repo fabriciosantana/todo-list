@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { AuthResponse, User } from '../models/types';
+import { runtimeConfig } from '../config/runtime-config';
 
 interface RegisterPayload {
   name: string;
@@ -16,7 +17,7 @@ interface LoginPayload {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly apiBase = 'http://localhost:8080/api/auth';
+  private readonly apiBase = `${runtimeConfig.apiBaseUrl}/api/auth`;
   private readonly tokenKey = 'todo.jwt';
   private readonly userKey = 'todo.user';
 

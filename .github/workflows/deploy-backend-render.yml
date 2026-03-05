@@ -1,0 +1,16 @@
+name: Deploy Backend (Render)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deploy Hook
+        run: |
+          test -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" || (echo "RENDER_DEPLOY_HOOK_URL não definido" && exit 1)
+          curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
