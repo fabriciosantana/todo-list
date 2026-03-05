@@ -31,6 +31,12 @@ mvn spring-boot:run
 API disponível em `http://localhost:8080`.
 Health check disponível em `http://localhost:8080/api/health`.
 
+Se necessário, ajuste CORS via variável de ambiente:
+
+```bash
+export CORS_ALLOWED_ORIGIN_PATTERNS="http://localhost:4200,http://127.0.0.1:4200,https://SEU-DOMINIO.app.github.dev"
+```
+
 ### 3) Frontend
 
 ```bash

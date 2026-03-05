@@ -2,6 +2,7 @@ package com.todo.app.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -26,11 +27,14 @@ public class SecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
   private final UserDetailsService userDetailsService;
+  private final List<String> allowedOriginPatterns;
 
   public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-      UserDetailsService userDetailsService) {
+      UserDetailsService userDetailsService,
+      @Value("${app.cors.allowed-origin-patterns}") List<String> allowedOriginPatterns) {
     this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     this.userDetailsService = userDetailsService;
+    this.allowedOriginPatterns = allowedOriginPatterns;
   }
 
   @Bean
@@ -70,9 +74,10 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOrigins(List.of("http://localhost:4200"));
+    config.setAllowedOriginPatterns(allowedOriginPatterns);
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-    config.setAllowedHeaders(List.of("*"));
+    config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin"));
+    config.setExposedHeaders(List.of("Authorization"));
     config.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
