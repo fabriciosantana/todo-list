@@ -29,6 +29,7 @@ mvn spring-boot:run
 ```
 
 API disponível em `http://localhost:8080`.
+Health check disponível em `http://localhost:8080/api/health`.
 
 ### 3) Frontend
 
