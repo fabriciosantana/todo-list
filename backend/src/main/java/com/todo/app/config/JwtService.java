@@ -5,6 +5,9 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.function.Function;
 import javax.crypto.SecretKey;
@@ -57,7 +60,24 @@ public class JwtService {
   }
 
   private SecretKey signingKey() {
-    byte[] keyBytes = Decoders.BASE64.decode(secret);
-    return Keys.hmacShaKeyFor(keyBytes);
+    return Keys.hmacShaKeyFor(resolveSigningKeyBytes());
+  }
+
+  private byte[] resolveSigningKeyBytes() {
+    try {
+      byte[] decoded = Decoders.BASE64.decode(secret);
+      if (decoded.length >= 32) {
+        return decoded;
+      }
+    } catch (IllegalArgumentException ignored) {
+      // Fallback below supports plain text secrets from hosting platforms.
+    }
+
+    try {
+      return MessageDigest.getInstance("SHA-256")
+          .digest(secret.getBytes(StandardCharsets.UTF_8));
+    } catch (NoSuchAlgorithmException e) {
+      throw new IllegalStateException("SHA-256 algorithm unavailable", e);
+    }
   }
 }
