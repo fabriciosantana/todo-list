@@ -9,15 +9,18 @@ export interface AuthResponse {
   user: User;
 }
 
+export type TaskStatus = 'A_FAZER' | 'FAZENDO' | 'CONCLUIDO';
+
 export interface Task {
   id: number;
   title: string;
-  completed: boolean;
+  status: TaskStatus;
+  archived: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface TaskRequest {
   title: string;
-  completed?: boolean;
+  status?: TaskStatus;
 }
