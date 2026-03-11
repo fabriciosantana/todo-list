@@ -1,0 +1,39 @@
+name: Deploy Frontend (Netlify)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+        run: npm run build
+
+      - name: Validate Netlify secrets
+        run: |
+          test -n "${{ secrets.NETLIFY_AUTH_TOKEN }}" || (echo "NETLIFY_AUTH_TOKEN não definido" && exit 1)
+          test -n "${{ secrets.NETLIFY_SITE_ID }}" || (echo "NETLIFY_SITE_ID não definido" && exit 1)
+
+      - name: Deploy to Netlify
+        run: npx netlify-cli deploy --dir=frontend/dist/frontend --prod --site="${{ secrets.NETLIFY_SITE_ID }}" --auth="${{ secrets.NETLIFY_AUTH_TOKEN }}"
