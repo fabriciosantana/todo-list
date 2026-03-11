@@ -2,6 +2,8 @@ package com.todo.app.domain.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,8 +26,12 @@ public class Task {
   @Column(nullable = false, length = 120)
   private String title;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 20)
+  private TaskStatus status = TaskStatus.A_FAZER;
+
   @Column(nullable = false)
-  private boolean completed;
+  private boolean archived;
 
   @Column(nullable = false)
   private Instant createdAt;
@@ -49,12 +55,20 @@ public class Task {
     this.title = title;
   }
 
-  public boolean isCompleted() {
-    return completed;
+  public TaskStatus getStatus() {
+    return status;
   }
 
-  public void setCompleted(boolean completed) {
-    this.completed = completed;
+  public void setStatus(TaskStatus status) {
+    this.status = status;
+  }
+
+  public boolean isArchived() {
+    return archived;
+  }
+
+  public void setArchived(boolean archived) {
+    this.archived = archived;
   }
 
   public Instant getCreatedAt() {

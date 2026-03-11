@@ -1,6 +1,7 @@
 package com.todo.app.application.service;
 
 import com.todo.app.domain.model.Task;
+import com.todo.app.domain.model.TaskStatus;
 import com.todo.app.domain.model.User;
 import com.todo.app.domain.repository.TaskRepository;
 import com.todo.app.domain.repository.UserRepository;
@@ -24,8 +25,8 @@ public class TaskService {
   }
 
   @Transactional(readOnly = true)
-  public List<TaskResponse> findAllByOwner(Long ownerId) {
-    return taskRepository.findAllByOwnerIdOrderByCreatedAtDesc(ownerId)
+  public List<TaskResponse> findAllByOwner(Long ownerId, boolean archived) {
+    return taskRepository.findAllByOwnerIdAndArchivedOrderByCreatedAtDesc(ownerId, archived)
         .stream()
         .map(this::toResponse)
         .toList();
@@ -38,7 +39,8 @@ public class TaskService {
 
     Task task = new Task();
     task.setTitle(request.title().trim());
-    task.setCompleted(false);
+    task.setStatus(resolveStatus(request.status()));
+    task.setArchived(false);
     task.setOwner(owner);
 
     return toResponse(taskRepository.save(task));
@@ -49,8 +51,8 @@ public class TaskService {
     Task task = findOwnerTask(ownerId, taskId);
     task.setTitle(request.title().trim());
 
-    if (request.completed() != null) {
-      task.setCompleted(request.completed());
+    if (request.status() != null) {
+      task.setStatus(request.status());
     }
 
     return toResponse(taskRepository.save(task));
@@ -59,7 +61,21 @@ public class TaskService {
   @Transactional
   public TaskResponse toggle(Long ownerId, Long taskId) {
     Task task = findOwnerTask(ownerId, taskId);
-    task.setCompleted(!task.isCompleted());
+    task.setStatus(task.getStatus().isDone() ? TaskStatus.A_FAZER : TaskStatus.CONCLUIDO);
+    return toResponse(taskRepository.save(task));
+  }
+
+  @Transactional
+  public TaskResponse archive(Long ownerId, Long taskId) {
+    Task task = findOwnerTask(ownerId, taskId);
+    task.setArchived(true);
+    return toResponse(taskRepository.save(task));
+  }
+
+  @Transactional
+  public TaskResponse unarchive(Long ownerId, Long taskId) {
+    Task task = findOwnerTask(ownerId, taskId);
+    task.setArchived(false);
     return toResponse(taskRepository.save(task));
   }
 
@@ -78,8 +94,13 @@ public class TaskService {
     return new TaskResponse(
         task.getId(),
         task.getTitle(),
-        task.isCompleted(),
+        task.getStatus(),
+        task.isArchived(),
         task.getCreatedAt(),
         task.getUpdatedAt());
+  }
+
+  private TaskStatus resolveStatus(TaskStatus status) {
+    return status == null ? TaskStatus.A_FAZER : status;
   }
 }

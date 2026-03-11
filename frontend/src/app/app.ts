@@ -1,25 +1,49 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from './core/auth.service';
 import { TaskService } from './core/task.service';
-import { Task, User } from './models/types';
+import { Task, TaskRequest, TaskStatus, User } from './models/types';
+
+interface StatusOption {
+  value: TaskStatus;
+  label: string;
+}
+
+type NoticeType = 'success' | 'error';
+type ViewMode = 'table' | 'kanban';
+type TaskScope = 'active' | 'archived';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, DatePipe],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App implements OnInit {
   private readonly formBuilder = new FormBuilder();
 
+  readonly statusOptions: StatusOption[] = [
+    { value: 'A_FAZER', label: 'A Fazer' },
+    { value: 'FAZENDO', label: 'Fazendo' },
+    { value: 'CONCLUIDO', label: 'Concluído' }
+  ];
+
+  readonly kanbanColumns: TaskStatus[] = ['A_FAZER', 'FAZENDO', 'CONCLUIDO'];
+
   authMode: 'login' | 'register' = 'login';
   currentUser: User | null = null;
   tasks: Task[] = [];
-  errorMessage = '';
-  infoMessage = '';
+  archivedTasks: Task[] = [];
+  viewMode: ViewMode = 'table';
+  taskScope: TaskScope = 'active';
+  draggedTaskId: number | null = null;
+  dragOverColumn: TaskStatus | null = null;
+  notice: { type: NoticeType; message: string } | null = null;
+  noticeCountdown = 0;
   loading = false;
+  private noticeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private noticeIntervalId: ReturnType<typeof setInterval> | null = null;
 
   authForm = this.formBuilder.group({
     name: [''],
@@ -28,7 +52,8 @@ export class App implements OnInit {
   });
 
   taskForm = this.formBuilder.group({
-    title: ['', [Validators.required, Validators.maxLength(120)]]
+    title: ['', [Validators.required, Validators.maxLength(120)]],
+    status: ['A_FAZER' as TaskStatus, [Validators.required]]
   });
 
   constructor(
@@ -46,8 +71,19 @@ export class App implements OnInit {
 
   setAuthMode(mode: 'login' | 'register'): void {
     this.authMode = mode;
-    this.errorMessage = '';
-    this.infoMessage = '';
+    this.clearNotice();
+  }
+
+  setViewMode(mode: ViewMode): void {
+    this.viewMode = mode;
+  }
+
+  setTaskScope(scope: TaskScope): void {
+    this.taskScope = scope;
+    if (scope === 'archived') {
+      this.viewMode = 'table';
+    }
+    this.loadTasks();
   }
 
   submitAuth(): void {
@@ -62,7 +98,7 @@ export class App implements OnInit {
     }
 
     this.loading = true;
-    this.errorMessage = '';
+    this.clearNotice();
 
     const email = this.authForm.value.email ?? '';
     const password = this.authForm.value.password ?? '';
@@ -73,13 +109,13 @@ export class App implements OnInit {
       this.authService.register({ name, email, password }).subscribe({
         next: (response) => {
           this.currentUser = response.user;
-          this.infoMessage = 'Cadastro realizado com sucesso.';
+          this.showNotice('success', 'Cadastro realizado com sucesso.');
           this.authForm.reset();
           this.loadTasks();
           this.loading = false;
         },
         error: (err) => {
-          this.errorMessage = err?.error?.message ?? 'Falha ao cadastrar usuário.';
+          this.showNotice('error', err?.error?.message ?? 'Falha ao cadastrar usuário.');
           this.loading = false;
         }
       });
@@ -89,13 +125,13 @@ export class App implements OnInit {
     this.authService.login({ email, password }).subscribe({
       next: (response) => {
         this.currentUser = response.user;
-        this.infoMessage = 'Login realizado com sucesso.';
+        this.showNotice('success', 'Login realizado com sucesso.');
         this.authForm.reset();
         this.loadTasks();
         this.loading = false;
       },
       error: (err) => {
-        this.errorMessage = err?.error?.message ?? 'Falha ao autenticar.';
+        this.showNotice('error', err?.error?.message ?? 'Falha ao autenticar.');
         this.loading = false;
       }
     });
@@ -105,18 +141,27 @@ export class App implements OnInit {
     this.authService.logout();
     this.currentUser = null;
     this.tasks = [];
-    this.errorMessage = '';
-    this.infoMessage = 'Sessão encerrada.';
+    this.archivedTasks = [];
+    this.showNotice('success', 'Sessão encerrada.');
   }
 
   loadTasks(): void {
-    this.taskService.list().subscribe({
+    this.taskService.list(false).subscribe({
       next: (tasks) => {
         this.tasks = tasks;
       },
       error: () => {
-        this.errorMessage = 'Não foi possível carregar tarefas. Faça login novamente.';
+        this.showNotice('error', 'Não foi possível carregar tarefas. Faça login novamente.');
         this.logout();
+      }
+    });
+
+    this.taskService.list(true).subscribe({
+      next: (tasks) => {
+        this.archivedTasks = tasks;
+      },
+      error: () => {
+        this.showNotice('error', 'Não foi possível carregar tarefas arquivadas.');
       }
     });
   }
@@ -127,26 +172,18 @@ export class App implements OnInit {
       return;
     }
 
-    const title = this.taskForm.value.title ?? '';
+    const payload: TaskRequest = {
+      title: this.taskForm.value.title ?? '',
+      status: (this.taskForm.value.status as TaskStatus | null) ?? 'A_FAZER'
+    };
 
-    this.taskService.create({ title }).subscribe({
+    this.taskService.create(payload).subscribe({
       next: (task) => {
         this.tasks = [task, ...this.tasks];
-        this.taskForm.reset();
+        this.taskForm.reset({ title: '', status: 'A_FAZER' });
       },
       error: () => {
-        this.errorMessage = 'Não foi possível criar a tarefa.';
-      }
-    });
-  }
-
-  toggleTask(taskId: number): void {
-    this.taskService.toggle(taskId).subscribe({
-      next: (updated) => {
-        this.tasks = this.tasks.map((task) => (task.id === taskId ? updated : task));
-      },
-      error: () => {
-        this.errorMessage = 'Não foi possível atualizar a tarefa.';
+        this.showNotice('error', 'Não foi possível criar a tarefa.');
       }
     });
   }
@@ -159,32 +196,187 @@ export class App implements OnInit {
 
     const title = newTitle.trim();
     if (!title) {
-      this.errorMessage = 'Título não pode ser vazio.';
+      this.showNotice('error', 'Título não pode ser vazio.');
       return;
     }
 
-    this.taskService.update(task.id, { title, completed: task.completed }).subscribe({
+    this.updateTask(task, { title, status: task.status }, 'Não foi possível editar a tarefa.');
+  }
+
+  updateTaskStatus(task: Task, status: TaskStatus): void {
+    if (task.status === status) {
+      return;
+    }
+
+    this.updateTask(task, { title: task.title, status }, 'Não foi possível atualizar o status da tarefa.');
+  }
+
+  archiveTask(taskId: number): void {
+    this.taskService.archive(taskId).subscribe({
       next: (updated) => {
-        this.tasks = this.tasks.map((item) => (item.id === task.id ? updated : item));
+        this.tasks = this.tasks.filter((task) => task.id !== taskId);
+        this.archivedTasks = [updated, ...this.archivedTasks.filter((task) => task.id !== taskId)];
+        this.showNotice('success', 'Tarefa arquivada.');
       },
       error: () => {
-        this.errorMessage = 'Não foi possível editar a tarefa.';
+        this.showNotice('error', 'Não foi possível arquivar a tarefa.');
       }
     });
   }
 
-  deleteTask(taskId: number): void {
-    this.taskService.delete(taskId).subscribe({
-      next: () => {
-        this.tasks = this.tasks.filter((task) => task.id !== taskId);
+  unarchiveTask(taskId: number): void {
+    this.taskService.unarchive(taskId).subscribe({
+      next: (updated) => {
+        this.archivedTasks = this.archivedTasks.filter((task) => task.id !== taskId);
+        this.tasks = [updated, ...this.tasks.filter((task) => task.id !== taskId)];
+        this.showNotice('success', 'Tarefa desarquivada.');
       },
       error: () => {
-        this.errorMessage = 'Não foi possível remover a tarefa.';
+        this.showNotice('error', 'Não foi possível desarquivar a tarefa.');
+      }
+    });
+  }
+
+  deleteTask(task: Task): void {
+    if (!task.archived) {
+      this.showNotice('success', 'Arquive a tarefa antes de excluí-la definitivamente.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Excluir permanentemente a tarefa "${task.title}"?\n\nEssa ação é irreversível.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.taskService.delete(task.id).subscribe({
+      next: () => {
+        this.tasks = this.tasks.filter((item) => item.id !== task.id);
+        this.archivedTasks = this.archivedTasks.filter((item) => item.id !== task.id);
+        this.showNotice('success', 'Tarefa removida permanentemente.');
+      },
+      error: () => {
+        this.showNotice('error', 'Não foi possível remover a tarefa.');
       }
     });
   }
 
   pendingCount(): number {
-    return this.tasks.filter((task) => !task.completed).length;
+    return this.tasks.filter((task) => task.status !== 'CONCLUIDO').length;
+  }
+
+  tasksByStatus(status: TaskStatus): Task[] {
+    return this.tasks
+      .filter((task) => task.status === status)
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+  }
+
+  statusLabel(status: TaskStatus): string {
+    return this.statusOptions.find((option) => option.value === status)?.label ?? status;
+  }
+
+  statusBadgeClass(status: TaskStatus): string {
+    switch (status) {
+      case 'A_FAZER':
+        return 'text-bg-secondary';
+      case 'FAZENDO':
+        return 'text-bg-warning';
+      case 'CONCLUIDO':
+        return 'text-bg-success';
+    }
+  }
+
+  trackByTaskId(_: number, task: Task): number {
+    return task.id;
+  }
+
+  startTaskDrag(task: Task): void {
+    this.draggedTaskId = task.id;
+    this.dragOverColumn = task.status;
+  }
+
+  endTaskDrag(): void {
+    this.draggedTaskId = null;
+    this.dragOverColumn = null;
+  }
+
+  allowKanbanDrop(event: DragEvent, status: TaskStatus): void {
+    event.preventDefault();
+    this.dragOverColumn = status;
+  }
+
+  clearKanbanDrop(status: TaskStatus): void {
+    if (this.dragOverColumn === status) {
+      this.dragOverColumn = null;
+    }
+  }
+
+  dropTaskOnColumn(status: TaskStatus): void {
+    if (this.draggedTaskId == null) {
+      this.dragOverColumn = null;
+      return;
+    }
+
+    const task = this.tasks.find((item) => item.id === this.draggedTaskId);
+    this.draggedTaskId = null;
+    this.dragOverColumn = null;
+
+    if (!task || task.status === status) {
+      return;
+    }
+
+    this.updateTask(task, { title: task.title, status }, 'Não foi possível atualizar o status da tarefa.');
+  }
+
+  isDragOverColumn(status: TaskStatus): boolean {
+    return this.dragOverColumn === status;
+  }
+
+  isDraggingTask(taskId: number): boolean {
+    return this.draggedTaskId === taskId;
+  }
+
+  private updateTask(task: Task, payload: TaskRequest, errorMessage: string): void {
+    this.taskService.update(task.id, payload).subscribe({
+      next: (updated) => {
+        if (updated.archived) {
+          this.tasks = this.tasks.filter((item) => item.id !== task.id);
+          this.archivedTasks = [updated, ...this.archivedTasks.filter((item) => item.id !== task.id)];
+          return;
+        }
+
+        this.tasks = this.tasks.map((item) => (item.id === task.id ? updated : item));
+      },
+      error: () => {
+        this.showNotice('error', errorMessage);
+      }
+    });
+  }
+
+  clearNotice(): void {
+    if (this.noticeTimeoutId) {
+      clearTimeout(this.noticeTimeoutId);
+      this.noticeTimeoutId = null;
+    }
+    if (this.noticeIntervalId) {
+      clearInterval(this.noticeIntervalId);
+      this.noticeIntervalId = null;
+    }
+    this.notice = null;
+    this.noticeCountdown = 0;
+  }
+
+  private showNotice(type: NoticeType, message: string): void {
+    this.clearNotice();
+    this.notice = { type, message };
+    this.noticeCountdown = 5;
+    this.noticeIntervalId = setInterval(() => {
+      this.noticeCountdown = Math.max(0, this.noticeCountdown - 1);
+    }, 1000);
+    this.noticeTimeoutId = setTimeout(() => {
+      this.clearNotice();
+    }, 5000);
   }
 }
