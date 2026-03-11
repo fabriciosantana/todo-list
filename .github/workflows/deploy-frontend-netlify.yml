@@ -36,4 +36,4 @@ jobs:
           test -n "${{ secrets.NETLIFY_SITE_ID }}" || (echo "NETLIFY_SITE_ID não definido" && exit 1)
 
       - name: Deploy to Netlify
-        run: npx netlify-cli deploy --dir=frontend/dist/frontend --prod --site="${{ secrets.NETLIFY_SITE_ID }}" --auth="${{ secrets.NETLIFY_AUTH_TOKEN }}"
+        run: npx netlify-cli deploy --dir=frontend/dist/frontend/browser --prod --site="${{ secrets.NETLIFY_SITE_ID }}" --auth="${{ secrets.NETLIFY_AUTH_TOKEN }}"
