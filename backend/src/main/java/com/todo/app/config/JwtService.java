@@ -69,7 +69,7 @@ public class JwtService {
       if (decoded.length >= 32) {
         return decoded;
       }
-    } catch (IllegalArgumentException ignored) {
+    } catch (RuntimeException ignored) {
       // Fallback below supports plain text secrets from hosting platforms.
     }
 
