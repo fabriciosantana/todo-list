@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,8 +31,9 @@ public class TaskController {
   }
 
   @GetMapping
-  public List<TaskResponse> list(@AuthenticationPrincipal User currentUser) {
-    return taskService.findAllByOwner(currentUser.getId());
+  public List<TaskResponse> list(@AuthenticationPrincipal User currentUser,
+      @RequestParam(defaultValue = "false") boolean archived) {
+    return taskService.findAllByOwner(currentUser.getId(), archived);
   }
 
   @PostMapping
@@ -51,6 +53,16 @@ public class TaskController {
   @PatchMapping("/{id}/toggle")
   public TaskResponse toggle(@AuthenticationPrincipal User currentUser, @PathVariable Long id) {
     return taskService.toggle(currentUser.getId(), id);
+  }
+
+  @PatchMapping("/{id}/archive")
+  public TaskResponse archive(@AuthenticationPrincipal User currentUser, @PathVariable Long id) {
+    return taskService.archive(currentUser.getId(), id);
+  }
+
+  @PatchMapping("/{id}/unarchive")
+  public TaskResponse unarchive(@AuthenticationPrincipal User currentUser, @PathVariable Long id) {
+    return taskService.unarchive(currentUser.getId(), id);
   }
 
   @DeleteMapping("/{id}")

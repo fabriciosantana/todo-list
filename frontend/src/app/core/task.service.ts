@@ -10,8 +10,12 @@ export class TaskService {
 
   constructor(private readonly http: HttpClient) {}
 
-  list(): Observable<Task[]> {
-    return this.http.get<Task[]>(this.apiBase);
+  list(archived = false): Observable<Task[]> {
+    return this.http.get<Task[]>(this.apiBase, {
+      params: {
+        archived: String(archived)
+      }
+    });
   }
 
   create(payload: TaskRequest): Observable<Task> {
@@ -28,5 +32,13 @@ export class TaskService {
 
   delete(taskId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiBase}/${taskId}`);
+  }
+
+  archive(taskId: number): Observable<Task> {
+    return this.http.patch<Task>(`${this.apiBase}/${taskId}/archive`, {});
+  }
+
+  unarchive(taskId: number): Observable<Task> {
+    return this.http.patch<Task>(`${this.apiBase}/${taskId}/unarchive`, {});
   }
 }
