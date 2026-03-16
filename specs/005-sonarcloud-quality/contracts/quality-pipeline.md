@@ -4,6 +4,7 @@
 - Secret obrigatório: `SONAR_TOKEN`
 - Variable obrigatória: `SONAR_ORGANIZATION`
 - Variable obrigatória: `SONAR_PROJECT_KEY`
+- `Automatic Analysis` desabilitado no projeto SonarCloud
 
 ## Generated artifacts
 - `backend/target/site/jacoco/jacoco.xml`

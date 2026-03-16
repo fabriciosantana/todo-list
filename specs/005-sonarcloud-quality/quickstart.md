@@ -4,6 +4,7 @@
 1. Criar secret `SONAR_TOKEN` em `Settings > Secrets and variables > Actions`.
 2. Criar variables `SONAR_ORGANIZATION` e `SONAR_PROJECT_KEY`.
 3. Confirmar que o projeto já existe ou pode ser provisionado no SonarCloud.
+4. Desabilitar `Automatic Analysis` no projeto SonarCloud para permitir análise por CI.
 
 ## Validação local
 1. Entrar em `backend/` e rodar `mvn test`.

@@ -97,6 +97,10 @@ Configurar em `Settings > Secrets and variables > Actions`:
 - Variable: `SONAR_ORGANIZATION`
 - Variable: `SONAR_PROJECT_KEY`
 
+Pré-requisito no SonarCloud:
+
+- Desabilitar `Automatic Analysis` no projeto, pois o workflow faz análise por CI e o SonarCloud rejeita a execução quando os dois modos ficam ativos ao mesmo tempo.
+
 ### Workflow
 
 - Workflow dedicado: `.github/workflows/sonarcloud.yml`
