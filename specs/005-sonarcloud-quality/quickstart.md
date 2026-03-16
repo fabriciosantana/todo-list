@@ -8,7 +8,7 @@
 ## Validação local
 1. Entrar em `backend/` e rodar `mvn test`.
 2. Confirmar o arquivo `backend/target/site/jacoco/jacoco.xml`.
-3. Entrar em `frontend/` e rodar `npm test -- --watch=false --browsers ChromeHeadless --code-coverage`.
+3. Entrar em `frontend/` e rodar `npm run test:ci`.
 4. Confirmar o arquivo `frontend/coverage/frontend/lcov.info`.
 5. Opcionalmente rodar o scanner local usando as mesmas variáveis do workflow.
 

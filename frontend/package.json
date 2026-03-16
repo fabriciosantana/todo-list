@@ -9,7 +9,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "test:ci": "ng test --watch=false --browsers ChromeHeadless --code-coverage --progress=false"
+    "test:ci": "ng test --watch=false --browsers ChromeHeadlessNoSandbox --code-coverage --progress=false"
   },
   "prettier": {
     "printWidth": 100,

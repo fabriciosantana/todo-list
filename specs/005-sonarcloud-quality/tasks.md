@@ -18,5 +18,5 @@
 - [ ] T008 Atualizar README com setup de SonarCloud, variables e fluxo operacional
 
 ## Phase 4: Validation
-- [ ] T009 Validar `mvn test`
-- [ ] T010 Validar `npm test -- --watch=false --browsers ChromeHeadless --code-coverage`
+- [x] T009 Validar `mvn test`
+- [ ] T010 Validar `npm run test:ci`
