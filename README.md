@@ -87,6 +87,79 @@ Definir no Render as variáveis:
 
 Workflow `.github/workflows/ci.yml` valida backend e frontend em push/PR.
 
+## Qualidade com SonarCloud
+
+### Secrets e variables no GitHub
+
+Configurar em `Settings > Secrets and variables > Actions`:
+
+- Secret: `SONAR_TOKEN`
+- Variable: `SONAR_ORGANIZATION`
+- Variable: `SONAR_PROJECT_KEY`
+
+Pré-requisito no SonarCloud:
+
+- Desabilitar `Automatic Analysis` no projeto, pois o workflow faz análise por CI e o SonarCloud rejeita a execução quando os dois modos ficam ativos ao mesmo tempo.
+
+### Workflow
+
+- Workflow dedicado: `.github/workflows/sonarcloud.yml`
+- Executa:
+  - testes do backend com JaCoCo
+  - testes do frontend em Chrome headless com LCOV
+  - scanner SonarCloud
+
+### Relatórios gerados
+
+- Backend: `backend/target/site/jacoco/jacoco.xml`
+- Frontend: `frontend/coverage/frontend/lcov.info`
+
+### Comandos locais úteis
+
+Backend com cobertura:
+
+```bash
+cd backend
+mvn test jacoco:report
+```
+
+Frontend com cobertura:
+
+```bash
+cd frontend
+npm ci
+npm run test:ci
+```
+
+Se estiver usando GitHub Codespaces e não houver um binário Chrome funcional, instale o Google Chrome no ambiente:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y wget gnupg
+wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-linux.gpg
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-linux.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+sudo apt-get update
+sudo apt-get install -y google-chrome-stable
+export CHROME_BIN=$(which google-chrome)
+cd frontend
+npm run test:ci
+```
+
+Análise local do backend no SonarCloud:
+
+```bash
+cd backend
+mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar \
+  -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+  -Dsonar.organization=$SONAR_ORGANIZATION \
+  -Dsonar.token=$SONAR_TOKEN
+```
+
+Observação:
+
+- Esse comando analisa apenas o módulo `backend`.
+- Para a análise completa do repositório, o fluxo suportado continua sendo o workflow [sonarcloud.yml](/workspaces/todo-list/.github/workflows/sonarcloud.yml), que agrega backend, frontend e cobertura.
+
 ## API_BASE_URL no Frontend
 
 O frontend agora usa `API_BASE_URL` no build.  
