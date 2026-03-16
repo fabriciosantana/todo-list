@@ -87,6 +87,46 @@ Definir no Render as variáveis:
 
 Workflow `.github/workflows/ci.yml` valida backend e frontend em push/PR.
 
+## Qualidade com SonarCloud
+
+### Secrets e variables no GitHub
+
+Configurar em `Settings > Secrets and variables > Actions`:
+
+- Secret: `SONAR_TOKEN`
+- Variable: `SONAR_ORGANIZATION`
+- Variable: `SONAR_PROJECT_KEY`
+
+### Workflow
+
+- Workflow dedicado: `.github/workflows/sonarcloud.yml`
+- Executa:
+  - testes do backend com JaCoCo
+  - testes do frontend em Chrome headless com LCOV
+  - scanner SonarCloud
+
+### Relatórios gerados
+
+- Backend: `backend/target/site/jacoco/jacoco.xml`
+- Frontend: `frontend/coverage/frontend/lcov.info`
+
+### Comandos locais úteis
+
+Backend com cobertura:
+
+```bash
+cd backend
+mvn test jacoco:report
+```
+
+Frontend com cobertura:
+
+```bash
+cd frontend
+npm ci
+npm run test:ci
+```
+
 ## API_BASE_URL no Frontend
 
 O frontend agora usa `API_BASE_URL` no build.  
