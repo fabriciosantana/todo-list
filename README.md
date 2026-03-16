@@ -131,6 +131,21 @@ npm ci
 npm run test:ci
 ```
 
+Análise local do backend no SonarCloud:
+
+```bash
+cd backend
+mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar \
+  -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+  -Dsonar.organization=$SONAR_ORGANIZATION \
+  -Dsonar.token=$SONAR_TOKEN
+```
+
+Observação:
+
+- Esse comando analisa apenas o módulo `backend`.
+- Para a análise completa do repositório, o fluxo suportado continua sendo o workflow [sonarcloud.yml](/workspaces/todo-list/.github/workflows/sonarcloud.yml), que agrega backend, frontend e cobertura.
+
 ## API_BASE_URL no Frontend
 
 O frontend agora usa `API_BASE_URL` no build.  
