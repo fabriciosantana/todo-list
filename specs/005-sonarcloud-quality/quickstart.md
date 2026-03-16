@@ -23,6 +23,21 @@ mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar \
 
 6. Se precisar da análise completa do repositório, usar o workflow de CI em vez do comando Maven isolado.
 
+## GitHub Codespaces
+Se o `CHROME_BIN` apontar para `chromium-browser` e o ambiente exigir `snap`, instale um Chrome real no Codespace:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y wget gnupg
+wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-linux.gpg
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-linux.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+sudo apt-get update
+sudo apt-get install -y google-chrome-stable
+export CHROME_BIN=$(which google-chrome)
+cd frontend
+npm run test:ci
+```
+
 ## Validação no pipeline
 1. Fazer push para a branch da feature.
 2. Verificar execução do workflow `SonarCloud Quality`.

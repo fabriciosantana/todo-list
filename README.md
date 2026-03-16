@@ -131,6 +131,20 @@ npm ci
 npm run test:ci
 ```
 
+Se estiver usando GitHub Codespaces e não houver um binário Chrome funcional, instale o Google Chrome no ambiente:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y wget gnupg
+wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-linux.gpg
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-linux.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+sudo apt-get update
+sudo apt-get install -y google-chrome-stable
+export CHROME_BIN=$(which google-chrome)
+cd frontend
+npm run test:ci
+```
+
 Análise local do backend no SonarCloud:
 
 ```bash
