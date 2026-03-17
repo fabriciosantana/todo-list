@@ -62,6 +62,7 @@ export class App implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.syncAuthModeValidators();
     this.currentUser = this.authService.getUser();
 
     if (this.authService.isAuthenticated()) {
@@ -71,6 +72,7 @@ export class App implements OnInit {
 
   setAuthMode(mode: 'login' | 'register'): void {
     this.authMode = mode;
+    this.syncAuthModeValidators();
     this.clearNotice();
   }
 
@@ -87,11 +89,6 @@ export class App implements OnInit {
   }
 
   submitAuth(): void {
-    if (this.authMode === 'register') {
-      this.authForm.controls.name.addValidators([Validators.required, Validators.minLength(2)]);
-      this.authForm.controls.name.updateValueAndValidity({ emitEvent: false });
-    }
-
     if (this.authForm.invalid) {
       this.authForm.markAllAsTouched();
       return;
@@ -353,6 +350,18 @@ export class App implements OnInit {
         this.showNotice('error', errorMessage);
       }
     });
+  }
+
+  private syncAuthModeValidators(): void {
+    const nameControl = this.authForm.controls.name;
+
+    if (this.authMode === 'register') {
+      nameControl.setValidators([Validators.required, Validators.minLength(2)]);
+    } else {
+      nameControl.clearValidators();
+    }
+
+    nameControl.updateValueAndValidity({ emitEvent: false });
   }
 
   clearNotice(): void {

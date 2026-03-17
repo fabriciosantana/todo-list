@@ -87,6 +87,8 @@ Definir no Render as variáveis:
 
 Workflow `.github/workflows/ci.yml` valida backend e frontend em push/PR.
 
+Workflow `.github/workflows/e2e.yml` executa a suíte Playwright com frontend, backend e PostgreSQL reais.
+
 ## Qualidade com SonarCloud
 
 ### Secrets e variables no GitHub
@@ -154,6 +156,21 @@ cd frontend
 npm ci
 npm run test:ci
 ```
+
+Frontend com testes E2E Playwright:
+
+```bash
+cd frontend
+npx playwright install chromium
+npx playwright test
+```
+
+Observações para Codespaces:
+
+- o Playwright usa o Chromium gerenciado por ele, sem depender do Chrome do sistema
+- a suíte sobe `postgres`, backend e frontend automaticamente
+- o relatório HTML fica em `frontend/playwright-report/`
+- os artefatos por falha ficam em `frontend/test-results/`
 
 Se estiver usando GitHub Codespaces e não houver um binário Chrome funcional, instale o Google Chrome no ambiente:
 

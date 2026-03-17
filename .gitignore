@@ -5,3 +5,5 @@
 .vscode/settings.json
 
 .scannerwork/
+frontend/playwright-report/
+frontend/test-results/
