@@ -211,6 +211,17 @@ export class App implements OnInit {
     this.updateTask(task, { title: task.title, status }, 'Não foi possível atualizar o status da tarefa.');
   }
 
+  toggleTaskDone(task: Task): void {
+    this.taskService.toggle(task.id).subscribe({
+      next: (updated) => {
+        this.tasks = this.tasks.map((item) => (item.id === task.id ? updated : item));
+      },
+      error: () => {
+        this.showNotice('error', 'Não foi possível atualizar o status da tarefa.');
+      }
+    });
+  }
+
   archiveTask(taskId: number): void {
     this.taskService.archive(taskId).subscribe({
       next: (updated) => {
@@ -238,13 +249,9 @@ export class App implements OnInit {
   }
 
   deleteTask(task: Task): void {
-    if (!task.archived) {
-      this.showNotice('success', 'Arquive a tarefa antes de excluí-la definitivamente.');
-      return;
-    }
-
+    const archiveWarning = task.archived ? '' : '\n\nAtenção: a tarefa ainda não está arquivada.';
     const confirmed = window.confirm(
-      `Excluir permanentemente a tarefa "${task.title}"?\n\nEssa ação é irreversível.`
+      `Excluir permanentemente a tarefa "${task.title}"?${archiveWarning}\n\nEssa ação é irreversível.`
     );
 
     if (!confirmed) {

@@ -70,6 +70,15 @@ describe('TaskService', () => {
     request.flush({ ...task, title: 'Atualizada', status: 'CONCLUIDO' });
   });
 
+  it('should toggle task status', () => {
+    service.toggle(7).subscribe();
+
+    const request = httpMock.expectOne('http://localhost:8080/api/tasks/7/toggle');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({});
+    request.flush({ ...task, status: 'CONCLUIDO' });
+  });
+
   it('should archive, unarchive and delete a task', () => {
     service.archive(7).subscribe();
     const archiveRequest = httpMock.expectOne('http://localhost:8080/api/tasks/7/archive');

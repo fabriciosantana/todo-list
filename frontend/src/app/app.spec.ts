@@ -50,6 +50,7 @@ describe('App', () => {
       'list',
       'create',
       'update',
+      'toggle',
       'archive',
       'unarchive',
       'delete'
@@ -62,6 +63,7 @@ describe('App', () => {
     taskServiceSpy.list.and.callFake((archived?: boolean) => of(archived ? [archivedTask] : [activeTask]));
     taskServiceSpy.create.and.returnValue(of(activeTask));
     taskServiceSpy.update.and.returnValue(of(activeTask));
+    taskServiceSpy.toggle.and.returnValue(of({ ...activeTask, status: 'CONCLUIDO' } as Task));
     taskServiceSpy.archive.and.returnValue(of(archivedTask));
     taskServiceSpy.unarchive.and.returnValue(of(activeTask));
     taskServiceSpy.delete.and.returnValue(of(void 0));
@@ -172,17 +174,56 @@ describe('App', () => {
     expect(app.notice).toEqual({ type: 'success', message: 'Tarefa arquivada.' });
   });
 
-  it('should require archived task before deletion', () => {
+  it('should toggle a task to done', () => {
+    const doneTask: Task = { ...activeTask, status: 'CONCLUIDO' };
+    taskServiceSpy.toggle.and.returnValue(of(doneTask));
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
+    app.tasks = [activeTask];
+
+    app.toggleTaskDone(activeTask);
+
+    expect(taskServiceSpy.toggle).toHaveBeenCalledWith(activeTask.id);
+    expect(app.tasks[0].status).toBe('CONCLUIDO');
+  });
+
+  it('should toggle a done task back to pending', () => {
+    const doneTask: Task = { ...activeTask, status: 'CONCLUIDO' };
+    taskServiceSpy.toggle.and.returnValue(of(activeTask));
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    app.tasks = [doneTask];
+
+    app.toggleTaskDone(doneTask);
+
+    expect(taskServiceSpy.toggle).toHaveBeenCalledWith(doneTask.id);
+    expect(app.tasks[0].status).toBe('A_FAZER');
+  });
+
+  it('should allow deleting an active task after confirmation', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    app.tasks = [activeTask];
+    app.archivedTasks = [];
+    spyOn(window, 'confirm').and.returnValue(true);
+
+    app.deleteTask(activeTask);
+
+    expect(taskServiceSpy.delete).toHaveBeenCalledWith(activeTask.id);
+    expect(app.tasks).toEqual([]);
+    expect(app.notice).toEqual({ type: 'success', message: 'Tarefa removida permanentemente.' });
+  });
+
+  it('should not delete a task when confirmation is cancelled', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    app.tasks = [activeTask];
+    spyOn(window, 'confirm').and.returnValue(false);
 
     app.deleteTask(activeTask);
 
     expect(taskServiceSpy.delete).not.toHaveBeenCalled();
-    expect(app.notice).toEqual({
-      type: 'success',
-      message: 'Arquive a tarefa antes de excluí-la definitivamente.'
-    });
+    expect(app.tasks).toEqual([activeTask]);
   });
 
   it('should delete archived task after confirmation', () => {
