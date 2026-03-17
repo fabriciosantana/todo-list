@@ -123,6 +123,30 @@ cd backend
 mvn test jacoco:report
 ```
 
+Backend com testes de integração via Testcontainers:
+
+```bash
+cd backend
+mvn test
+```
+
+Pré-requisitos para a suíte de integração:
+
+- Docker funcional no ambiente local
+- estratégia Unix socket configurada para o Testcontainers quando necessário:
+
+```bash
+cat <<'EOF' > ~/.testcontainers.properties
+docker.client.strategy=org.testcontainers.dockerclient.UnixSocketClientProviderStrategy
+EOF
+```
+
+Relatórios do backend:
+
+- resultados dos testes: `backend/target/surefire-reports/`
+- cobertura HTML: `backend/target/site/jacoco/index.html`
+- cobertura XML: `backend/target/site/jacoco/jacoco.xml`
+
 Frontend com cobertura:
 
 ```bash
