@@ -110,7 +110,7 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     spyOn(app, 'loadTasks');
-    app.authMode = 'register';
+    app.setAuthMode('register');
     app.authForm.setValue({
       name: 'Fabricio',
       email: 'fabricio@example.com',
@@ -128,6 +128,26 @@ describe('App', () => {
     expect(app.notice).toEqual({ type: 'success', message: 'Cadastro realizado com sucesso.' });
     expect(app.loadTasks).toHaveBeenCalled();
     expect(app.loading).toBeFalse();
+  });
+
+  it('should allow login after switching from register mode', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+
+    app.setAuthMode('register');
+    app.setAuthMode('login');
+    app.authForm.patchValue({
+      email: 'fabricio@example.com',
+      password: '123456'
+    });
+
+    app.submitAuth();
+
+    expect(authServiceSpy.login).toHaveBeenCalledWith({
+      email: 'fabricio@example.com',
+      password: '123456'
+    });
+    expect(app.currentUser).toEqual(user);
   });
 
   it('should show an error notice when login fails', () => {
@@ -200,18 +220,19 @@ describe('App', () => {
     expect(app.tasks[0].status).toBe('A_FAZER');
   });
 
-  it('should allow deleting an active task after confirmation', () => {
+  it('should require archived task before deletion', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     app.tasks = [activeTask];
     app.archivedTasks = [];
-    spyOn(window, 'confirm').and.returnValue(true);
 
     app.deleteTask(activeTask);
 
-    expect(taskServiceSpy.delete).toHaveBeenCalledWith(activeTask.id);
-    expect(app.tasks).toEqual([]);
-    expect(app.notice).toEqual({ type: 'success', message: 'Tarefa removida permanentemente.' });
+    expect(taskServiceSpy.delete).not.toHaveBeenCalled();
+    expect(app.notice).toEqual({
+      type: 'success',
+      message: 'Arquive a tarefa antes de excluí-la definitivamente.'
+    });
   });
 
   it('should not delete a task when confirmation is cancelled', () => {
