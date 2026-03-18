@@ -1,0 +1,9 @@
+apiVersion: 1
+
+providers:
+  - name: todo-observability
+    type: file
+    disableDeletion: true
+    editable: false
+    options:
+      path: /var/lib/grafana/dashboards

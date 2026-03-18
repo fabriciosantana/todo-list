@@ -1,0 +1,24 @@
+management:
+  otlp:
+    metrics:
+      export:
+        enabled: true
+        step: 30s
+        url: ${OTLP_METRICS_URL}
+        headers:
+          Authorization: ${OTLP_AUTHORIZATION_HEADER}
+  opentelemetry:
+    tracing:
+      export:
+        enabled: true
+        otlp:
+          endpoint: ${OTLP_TRACES_URL}
+          headers:
+            Authorization: ${OTLP_AUTHORIZATION_HEADER}
+
+observability:
+  environment: ${OBSERVABILITY_ENVIRONMENT:cloud}
+  loki:
+    url: ${LOKI_URL}
+    username: ${LOKI_USERNAME}
+    password: ${LOKI_PASSWORD}
