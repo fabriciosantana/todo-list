@@ -170,6 +170,9 @@
                           <td>{{ task.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
                           <td class="text-end">
                             <div class="btn-group btn-group-sm icon-actions">
+                              <button class="btn btn-outline-success" [class.active]="task.status === 'CONCLUIDO'" (click)="toggleTaskDone(task)" [title]="task.status === 'CONCLUIDO' ? 'Marcar como pendente' : 'Marcar como concluída'" [attr.aria-label]="task.status === 'CONCLUIDO' ? 'Marcar como pendente' : 'Marcar como concluída'">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                              </button>
                               <button class="btn btn-outline-primary" [attr.data-testid]="'edit-task-' + task.id" (click)="editTask(task)" title="Editar tarefa" aria-label="Editar tarefa">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25Zm2.92 2.33H5v-.92l9.06-9.06.92.92L5.92 19.58ZM20.71 7.04a1.003 1.003 0 0 0 0-1.42L18.37 3.29a1.003 1.003 0 0 0-1.42 0l-1.13 1.13 3.75 3.75 1.14-1.13Z"/></svg>
                               </button>
@@ -228,6 +231,9 @@
                               </select>
 
                               <div class="btn-group btn-group-sm w-100 icon-actions">
+                                <button class="btn btn-outline-success" [class.active]="task.status === 'CONCLUIDO'" (click)="toggleTaskDone(task)" [title]="task.status === 'CONCLUIDO' ? 'Marcar como pendente' : 'Marcar como concluída'" [attr.aria-label]="task.status === 'CONCLUIDO' ? 'Marcar como pendente' : 'Marcar como concluída'">
+                                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                </button>
                                 <button class="btn btn-outline-primary" [attr.data-testid]="'kanban-edit-task-' + task.id" (click)="editTask(task)" title="Editar tarefa" aria-label="Editar tarefa">
                                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25Zm2.92 2.33H5v-.92l9.06-9.06.92.92L5.92 19.58ZM20.71 7.04a1.003 1.003 0 0 0 0-1.42L18.37 3.29a1.003 1.003 0 0 0-1.42 0l-1.13 1.13 3.75 3.75 1.14-1.13Z"/></svg>
                                 </button>

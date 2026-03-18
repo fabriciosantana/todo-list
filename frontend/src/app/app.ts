@@ -208,6 +208,17 @@ export class App implements OnInit {
     this.updateTask(task, { title: task.title, status }, 'Não foi possível atualizar o status da tarefa.');
   }
 
+  toggleTaskDone(task: Task): void {
+    this.taskService.toggle(task.id).subscribe({
+      next: (updated) => {
+        this.tasks = this.tasks.map((item) => (item.id === task.id ? updated : item));
+      },
+      error: () => {
+        this.showNotice('error', 'Não foi possível atualizar o status da tarefa.');
+      }
+    });
+  }
+
   archiveTask(taskId: number): void {
     this.taskService.archive(taskId).subscribe({
       next: (updated) => {
@@ -335,6 +346,18 @@ export class App implements OnInit {
     return this.draggedTaskId === taskId;
   }
 
+  private syncAuthModeValidators(): void {
+    const nameControl = this.authForm.controls.name;
+
+    if (this.authMode === 'register') {
+      nameControl.setValidators([Validators.required, Validators.minLength(2)]);
+    } else {
+      nameControl.clearValidators();
+    }
+
+    nameControl.updateValueAndValidity({ emitEvent: false });
+  }
+
   private updateTask(task: Task, payload: TaskRequest, errorMessage: string): void {
     this.taskService.update(task.id, payload).subscribe({
       next: (updated) => {
@@ -350,18 +373,6 @@ export class App implements OnInit {
         this.showNotice('error', errorMessage);
       }
     });
-  }
-
-  private syncAuthModeValidators(): void {
-    const nameControl = this.authForm.controls.name;
-
-    if (this.authMode === 'register') {
-      nameControl.setValidators([Validators.required, Validators.minLength(2)]);
-    } else {
-      nameControl.clearValidators();
-    }
-
-    nameControl.updateValueAndValidity({ emitEvent: false });
   }
 
   clearNotice(): void {
