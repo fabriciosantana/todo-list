@@ -12,7 +12,7 @@
             </div>
 
             @if (notice) {
-              <div class="alert py-2 notice-banner" [class.alert-danger]="notice.type === 'error'" [class.alert-success]="notice.type === 'success'">
+              <div class="alert py-2 notice-banner" data-testid="notice-banner" [class.alert-danger]="notice.type === 'error'" [class.alert-success]="notice.type === 'success'">
                 <div class="notice-banner__content">
                   <span>{{ notice.message }}</span>
                   <div class="notice-banner__meta">
@@ -25,30 +25,30 @@
 
             @if (!currentUser) {
               <div class="d-flex gap-2 mb-3">
-                <button class="btn btn-outline-primary" [class.active]="authMode === 'login'" (click)="setAuthMode('login')">Login</button>
-                <button class="btn btn-outline-primary" [class.active]="authMode === 'register'" (click)="setAuthMode('register')">Cadastro</button>
+                <button class="btn btn-outline-primary" data-testid="auth-mode-login" [class.active]="authMode === 'login'" (click)="setAuthMode('login')">Login</button>
+                <button class="btn btn-outline-primary" data-testid="auth-mode-register" [class.active]="authMode === 'register'" (click)="setAuthMode('register')">Cadastro</button>
               </div>
 
-              <form [formGroup]="authForm" (ngSubmit)="submitAuth()" class="row g-3">
+              <form [formGroup]="authForm" (ngSubmit)="submitAuth()" class="row g-3" data-testid="auth-form">
                 @if (authMode === 'register') {
                   <div class="col-12">
                     <label for="name" class="form-label">Nome</label>
-                    <input id="name" type="text" class="form-control" formControlName="name" />
+                    <input id="name" data-testid="auth-name" type="text" class="form-control" formControlName="name" />
                   </div>
                 }
 
                 <div class="col-12">
                   <label for="email" class="form-label">E-mail</label>
-                  <input id="email" type="email" class="form-control" formControlName="email" />
+                  <input id="email" data-testid="auth-email" type="email" class="form-control" formControlName="email" />
                 </div>
 
                 <div class="col-12">
                   <label for="password" class="form-label">Senha</label>
-                  <input id="password" type="password" class="form-control" formControlName="password" />
+                  <input id="password" data-testid="auth-password" type="password" class="form-control" formControlName="password" />
                 </div>
 
                 <div class="col-12">
-                  <button type="submit" class="btn btn-primary" [disabled]="loading">
+                  <button type="submit" data-testid="auth-submit" class="btn btn-primary" [disabled]="loading">
                     {{ authMode === 'login' ? 'Entrar' : 'Cadastrar' }}
                   </button>
                 </div>
@@ -56,40 +56,40 @@
             } @else {
               <div class="toolbar mb-4">
                 <div>
-                  <p class="mb-0 fw-semibold">Olá, {{ currentUser.name }}</p>
+                  <p class="mb-0 fw-semibold" data-testid="user-greeting">Olá, {{ currentUser.name }}</p>
                   <small class="text-muted">{{ pendingCount() }} tarefas ativas</small>
                 </div>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                   <div class="btn-group btn-group-sm scope-toggle" role="group" aria-label="Escopo de tarefas">
-                    <button class="btn btn-outline-dark" [class.active]="taskScope === 'active'" (click)="setTaskScope('active')">Ativas</button>
-                    <button class="btn btn-outline-dark" [class.active]="taskScope === 'archived'" (click)="setTaskScope('archived')">Arquivadas</button>
-                  </div>
+                      <button class="btn btn-outline-dark" data-testid="scope-active" [class.active]="taskScope === 'active'" (click)="setTaskScope('active')">Ativas</button>
+                      <button class="btn btn-outline-dark" data-testid="scope-archived" [class.active]="taskScope === 'archived'" (click)="setTaskScope('archived')">Arquivadas</button>
+                    </div>
                   @if (taskScope === 'active') {
                     <div class="btn-group btn-group-sm view-toggle" role="group" aria-label="Modo de visualização">
-                      <button class="btn btn-outline-dark" [class.active]="viewMode === 'table'" (click)="setViewMode('table')">Tabela</button>
-                      <button class="btn btn-outline-dark" [class.active]="viewMode === 'kanban'" (click)="setViewMode('kanban')">Kanban</button>
+                      <button class="btn btn-outline-dark" data-testid="view-table" [class.active]="viewMode === 'table'" (click)="setViewMode('table')">Tabela</button>
+                      <button class="btn btn-outline-dark" data-testid="view-kanban" [class.active]="viewMode === 'kanban'" (click)="setViewMode('kanban')">Kanban</button>
                     </div>
                   }
-                  <button class="btn btn-sm btn-outline-secondary" (click)="logout()">Sair</button>
+                  <button class="btn btn-sm btn-outline-secondary" data-testid="logout-button" (click)="logout()">Sair</button>
                 </div>
               </div>
 
               @if (taskScope === 'active') {
-                <form [formGroup]="taskForm" (ngSubmit)="createTask()" class="task-entry row g-2 align-items-end mb-4">
+                <form [formGroup]="taskForm" (ngSubmit)="createTask()" class="task-entry row g-2 align-items-end mb-4" data-testid="task-form">
                   <div class="col-12 col-lg-7">
                     <label class="form-label" for="task-title">Nova tarefa</label>
-                    <input id="task-title" type="text" class="form-control" placeholder="Ex.: Refinar backlog do sprint" formControlName="title" />
+                    <input id="task-title" data-testid="task-title-input" type="text" class="form-control" placeholder="Ex.: Refinar backlog do sprint" formControlName="title" />
                   </div>
                   <div class="col-12 col-md-5 col-lg-3">
                     <label class="form-label" for="task-status">Status inicial</label>
-                    <select id="task-status" class="form-select" formControlName="status">
+                    <select id="task-status" data-testid="task-status-select" class="form-select" formControlName="status">
                       @for (option of statusOptions; track option.value) {
                         <option [value]="option.value">{{ option.label }}</option>
                       }
                     </select>
                   </div>
                   <div class="col-12 col-lg-2 d-grid">
-                    <button class="btn btn-primary" type="submit">Adicionar</button>
+                    <button class="btn btn-primary" data-testid="task-add-button" type="submit">Adicionar</button>
                   </div>
                 </form>
               }
@@ -117,7 +117,7 @@
                     </thead>
                     <tbody>
                       @for (task of archivedTasks; track trackByTaskId($index, task)) {
-                        <tr>
+                        <tr [attr.data-testid]="'archived-row-' + task.id">
                           <td>
                             <div class="fw-semibold">{{ task.title }}</div>
                             <small class="text-muted">Atualizada em {{ task.updatedAt | date:'dd/MM/yyyy HH:mm' }}</small>
@@ -126,10 +126,10 @@
                           <td>{{ task.updatedAt | date:'dd/MM/yyyy HH:mm' }}</td>
                           <td class="text-end">
                             <div class="btn-group btn-group-sm icon-actions">
-                              <button class="btn btn-outline-success" (click)="unarchiveTask(task.id)" title="Desarquivar tarefa" aria-label="Desarquivar tarefa">
+                              <button class="btn btn-outline-success" [attr.data-testid]="'unarchive-task-' + task.id" (click)="unarchiveTask(task.id)" title="Desarquivar tarefa" aria-label="Desarquivar tarefa">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.54 5.23 19.15 3.55A2 2 0 0 0 17.61 3H6.39a2 2 0 0 0-1.54.55L3.46 5.23A2 2 0 0 0 3 6.5V8a2 2 0 0 0 2 2h1l1.08 8.09A2 2 0 0 0 9.06 20h5.88a2 2 0 0 0 1.98-1.91L18 10h1a2 2 0 0 0 2-2V6.5a2 2 0 0 0-.46-1.27ZM12 18l-4-4h2.5v-4h3v4H16l-4 4Z"/></svg>
                               </button>
-                              <button class="btn btn-outline-danger" (click)="deleteTask(task)" title="Remover tarefa permanentemente" aria-label="Remover tarefa permanentemente">
+                              <button class="btn btn-outline-danger" [attr.data-testid]="'delete-task-' + task.id" (click)="deleteTask(task)" title="Remover tarefa permanentemente" aria-label="Remover tarefa permanentemente">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 14H7L6 7Zm3-3h6l1 2h4v2H4V6h4l1-2Z"/></svg>
                               </button>
                             </div>
@@ -152,7 +152,7 @@
                     </thead>
                     <tbody>
                       @for (task of tasks; track trackByTaskId($index, task)) {
-                        <tr>
+                        <tr [attr.data-testid]="'task-row-' + task.id">
                           <td>
                             <div class="fw-semibold">{{ task.title }}</div>
                             <small class="text-muted">Atualizada em {{ task.updatedAt | date:'dd/MM/yyyy HH:mm' }}</small>
@@ -160,7 +160,7 @@
                           <td>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                               <span class="badge rounded-pill" [class]="statusBadgeClass(task.status)">{{ statusLabel(task.status) }}</span>
-                              <select class="form-select form-select-sm status-select" [value]="task.status" (change)="updateTaskStatus(task, $any($event.target).value)">
+                              <select class="form-select form-select-sm status-select" [attr.data-testid]="'task-status-row-' + task.id" [value]="task.status" (change)="updateTaskStatus(task, $any($event.target).value)">
                                 @for (option of statusOptions; track option.value) {
                                   <option [value]="option.value">{{ option.label }}</option>
                                 }
@@ -173,10 +173,10 @@
                               <button class="btn btn-outline-success" [class.active]="task.status === 'CONCLUIDO'" (click)="toggleTaskDone(task)" [title]="task.status === 'CONCLUIDO' ? 'Marcar como pendente' : 'Marcar como concluída'" [attr.aria-label]="task.status === 'CONCLUIDO' ? 'Marcar como pendente' : 'Marcar como concluída'">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                               </button>
-                              <button class="btn btn-outline-primary" (click)="editTask(task)" title="Editar tarefa" aria-label="Editar tarefa">
+                              <button class="btn btn-outline-primary" [attr.data-testid]="'edit-task-' + task.id" (click)="editTask(task)" title="Editar tarefa" aria-label="Editar tarefa">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25Zm2.92 2.33H5v-.92l9.06-9.06.92.92L5.92 19.58ZM20.71 7.04a1.003 1.003 0 0 0 0-1.42L18.37 3.29a1.003 1.003 0 0 0-1.42 0l-1.13 1.13 3.75 3.75 1.14-1.13Z"/></svg>
                               </button>
-                              <button class="btn btn-outline-secondary" (click)="archiveTask(task.id)" title="Arquivar tarefa" aria-label="Arquivar tarefa">
+                              <button class="btn btn-outline-secondary" [attr.data-testid]="'archive-task-' + task.id" (click)="archiveTask(task.id)" title="Arquivar tarefa" aria-label="Arquivar tarefa">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.54 5.23 19.15 3.55A2 2 0 0 0 17.61 3H6.39a2 2 0 0 0-1.54.55L3.46 5.23A2 2 0 0 0 3 6.5V8a2 2 0 0 0 2 2h1l1.08 8.09A2 2 0 0 0 9.06 20h5.88a2 2 0 0 0 1.98-1.91L18 10h1a2 2 0 0 0 2-2V6.5a2 2 0 0 0-.46-1.27ZM19 8H5V6.5l1.35-1.5h11.29L19 6.5V8Zm-7 8-4-4h2.5V9h3v3H16l-4 4Z"/></svg>
                               </button>
                             </div>
@@ -191,6 +191,7 @@
                   @for (column of kanbanColumns; track column) {
                     <div class="col-12 col-lg-4">
                       <section
+                        [attr.data-testid]="'kanban-column-' + column"
                         class="kanban-column"
                         [class.kanban-column--drop-target]="isDragOverColumn(column)"
                         (dragover)="allowKanbanDrop($event, column)"
@@ -207,6 +208,7 @@
                         <div class="kanban-column__body">
                           @for (task of tasksByStatus(column); track trackByTaskId($index, task)) {
                             <article
+                              [attr.data-testid]="'kanban-card-' + task.id"
                               class="kanban-card"
                               draggable="true"
                               [class.kanban-card--dragging]="isDraggingTask(task.id)"
@@ -222,7 +224,7 @@
                               </div>
 
                               <label class="form-label small text-muted">Mover para</label>
-                              <select class="form-select form-select-sm mb-3" [value]="task.status" (change)="updateTaskStatus(task, $any($event.target).value)">
+                              <select class="form-select form-select-sm mb-3" [attr.data-testid]="'kanban-status-' + task.id" [value]="task.status" (change)="updateTaskStatus(task, $any($event.target).value)">
                                 @for (option of statusOptions; track option.value) {
                                   <option [value]="option.value">{{ option.label }}</option>
                                 }
@@ -232,10 +234,10 @@
                                 <button class="btn btn-outline-success" [class.active]="task.status === 'CONCLUIDO'" (click)="toggleTaskDone(task)" [title]="task.status === 'CONCLUIDO' ? 'Marcar como pendente' : 'Marcar como concluída'" [attr.aria-label]="task.status === 'CONCLUIDO' ? 'Marcar como pendente' : 'Marcar como concluída'">
                                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                 </button>
-                                <button class="btn btn-outline-primary" (click)="editTask(task)" title="Editar tarefa" aria-label="Editar tarefa">
+                                <button class="btn btn-outline-primary" [attr.data-testid]="'kanban-edit-task-' + task.id" (click)="editTask(task)" title="Editar tarefa" aria-label="Editar tarefa">
                                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25Zm2.92 2.33H5v-.92l9.06-9.06.92.92L5.92 19.58ZM20.71 7.04a1.003 1.003 0 0 0 0-1.42L18.37 3.29a1.003 1.003 0 0 0-1.42 0l-1.13 1.13 3.75 3.75 1.14-1.13Z"/></svg>
                                 </button>
-                                <button class="btn btn-outline-secondary" (click)="archiveTask(task.id)" title="Arquivar tarefa" aria-label="Arquivar tarefa">
+                                <button class="btn btn-outline-secondary" [attr.data-testid]="'kanban-archive-task-' + task.id" (click)="archiveTask(task.id)" title="Arquivar tarefa" aria-label="Arquivar tarefa">
                                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.54 5.23 19.15 3.55A2 2 0 0 0 17.61 3H6.39a2 2 0 0 0-1.54.55L3.46 5.23A2 2 0 0 0 3 6.5V8a2 2 0 0 0 2 2h1l1.08 8.09A2 2 0 0 0 9.06 20h5.88a2 2 0 0 0 1.98-1.91L18 10h1a2 2 0 0 0 2-2V6.5a2 2 0 0 0-.46-1.27ZM19 8H5V6.5l1.35-1.5h11.29L19 6.5V8Zm-7 8-4-4h2.5V9h3v3H16l-4 4Z"/></svg>
                                 </button>
                               </div>
