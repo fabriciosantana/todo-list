@@ -1,5 +1,9 @@
 management:
   otlp:
+    tracing:
+      endpoint: ${OTLP_TRACES_URL}
+      headers:
+        Authorization: ${OTLP_AUTHORIZATION_HEADER}
     metrics:
       export:
         enabled: true
@@ -7,14 +11,6 @@ management:
         url: ${OTLP_METRICS_URL}
         headers:
           Authorization: ${OTLP_AUTHORIZATION_HEADER}
-  opentelemetry:
-    tracing:
-      export:
-        enabled: true
-        otlp:
-          endpoint: ${OTLP_TRACES_URL}
-          headers:
-            Authorization: ${OTLP_AUTHORIZATION_HEADER}
 
 observability:
   environment: ${OBSERVABILITY_ENVIRONMENT:cloud}

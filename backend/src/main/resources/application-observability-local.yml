@@ -3,12 +3,8 @@ management:
     metrics:
       export:
         enabled: false
-  opentelemetry:
     tracing:
-      export:
-        enabled: true
-        otlp:
-          endpoint: ${LOCAL_OTLP_TRACES_URL:http://localhost:4318/v1/traces}
+      endpoint: ${LOCAL_OTLP_TRACES_URL:http://localhost:4318/v1/traces}
 
 observability:
   environment: local
