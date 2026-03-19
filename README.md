@@ -51,6 +51,62 @@ npm start
 
 Aplicação disponível em `http://localhost:4200`.
 
+## Observabilidade
+
+### Modo local com LGTM self-hosted
+
+Suba a stack LGTM local:
+
+```bash
+docker compose -f observability/docker-compose.yml up -d
+```
+
+Depois inicie o backend com o perfil local:
+
+```bash
+cd backend
+SPRING_PROFILES_ACTIVE=observability-local mvn spring-boot:run
+```
+
+URLs locais:
+
+- Grafana: `http://localhost:3000` (`admin` / `admin`)
+- Prometheus: `http://localhost:9090`
+- Loki: `http://localhost:3100`
+- Tempo: `http://localhost:3200`
+
+Smoke checks:
+
+```bash
+curl http://localhost:8080/actuator/health
+curl http://localhost:8080/actuator/prometheus
+```
+
+O Grafana local já sobe com datasources provisionados para `Prometheus`, `Loki` e `Tempo`, além do dashboard `Todo Observability`.
+
+### Modo cloud com Grafana Cloud Free
+
+No modo cloud, o backend envia métricas e traces por OTLP e logs para Loki hospedado no Grafana Cloud.
+
+```bash
+cd backend
+export SPRING_PROFILES_ACTIVE=observability-cloud
+export OTLP_AUTHORIZATION_HEADER="Basic <base64(instance-id:api-token)>"
+export OTLP_METRICS_URL="https://otlp-gateway-prod-us-central-0.grafana.net/otlp/v1/metrics"
+export OTLP_TRACES_URL="https://otlp-gateway-prod-us-central-0.grafana.net/otlp/v1/traces"
+export LOKI_URL="https://logs-prod-us-central1.grafana.net/loki/api/v1/push"
+export LOKI_USERNAME="<loki-user>"
+export LOKI_PASSWORD="<grafana-cloud-api-token>"
+export OBSERVABILITY_ENVIRONMENT="production"
+mvn spring-boot:run
+```
+
+Observações:
+
+- sem `SPRING_PROFILES_ACTIVE=observability-cloud`, a aplicação não tenta exportar para Grafana Cloud
+- o endpoint `/actuator/prometheus` continua disponível para scrape local
+- segredos de observabilidade não devem ser versionados
+
 ## Deploy (GitHub Actions + Netlify + Render + Supabase)
 
 ### 1) Secrets no GitHub Actions
