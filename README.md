@@ -109,20 +109,22 @@ Observações:
 
 ## Deploy (GitHub Actions + Netlify + Render + Supabase)
 
-### 1) Secrets no GitHub Actions
+### 1) Secrets e variables no GitHub Actions
 
 Configurar em `Settings > Secrets and variables > Actions`:
 
 - `NETLIFY_AUTH_TOKEN`
 - `NETLIFY_SITE_ID`
 - `RENDER_DEPLOY_HOOK_URL`
-- `API_BASE_URL` (URL pública do backend no Render, ex.: `https://seu-backend.onrender.com`)
+- Variable `API_BASE_URL` (URL pública do backend no Render, ex.: `https://seu-backend.onrender.com`)
 
 ### 2) Frontend no Netlify
 
 - Workflow: `.github/workflows/deploy-frontend-netlify.yml`
 - Trigger: qualquer commit/merge (push) em `main`
 - Build config: `netlify.toml`
+- O build do frontend acontece no GitHub Actions
+- O deploy publica o diretório já gerado em `frontend/dist/frontend/browser`
 
 ### 3) Backend no Render
 
@@ -261,6 +263,12 @@ Observação:
 
 O frontend agora usa `API_BASE_URL` no build.  
 Se a variável não existir, ele faz fallback para `http://localhost:8080`.
+
+Importante:
+
+- o build de produção do frontend acontece no GitHub Actions
+- portanto `API_BASE_URL` deve existir em `Settings > Secrets and variables > Actions > Variables`
+- definir `API_BASE_URL` apenas no painel do Netlify não altera o bundle gerado por esse workflow
 
 ## Migrações (Flyway)
 
