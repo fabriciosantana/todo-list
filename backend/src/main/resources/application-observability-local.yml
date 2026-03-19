@@ -1,0 +1,14 @@
+management:
+  otlp:
+    metrics:
+      export:
+        enabled: false
+    tracing:
+      endpoint: ${LOCAL_OTLP_TRACES_URL:http://localhost:4318/v1/traces}
+
+observability:
+  environment: local
+  loki:
+    url: ${LOCAL_LOKI_URL:http://localhost:3100/loki/api/v1/push}
+    username: ""
+    password: ""

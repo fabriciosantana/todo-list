@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+  <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="todo-backend"/>
+  <springProperty scope="context" name="environment" source="observability.environment" defaultValue="local"/>
+  <springProperty scope="context" name="lokiUrl" source="observability.loki.url" defaultValue=""/>
+  <springProperty scope="context" name="lokiUsername" source="observability.loki.username" defaultValue=""/>
+  <springProperty scope="context" name="lokiPassword" source="observability.loki.password" defaultValue=""/>
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="org.springframework.boot.logging.logback.StructuredLogEncoder">
+      <format>${CONSOLE_LOG_STRUCTURED_FORMAT:-logstash}</format>
+      <charset>${CONSOLE_LOG_CHARSET:-UTF-8}</charset>
+    </encoder>
+  </appender>
+
+  <springProfile name="!observability-local &amp; !observability-cloud">
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+
+  <springProfile name="observability-local">
+    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+      <http>
+        <url>${lokiUrl}</url>
+      </http>
+      <format>
+        <label>
+          <pattern>application=${appName},environment=${environment},host=${HOSTNAME:-local}</pattern>
+          <readMarkers>true</readMarkers>
+        </label>
+        <message>
+          <pattern>%message</pattern>
+        </message>
+        <sortByTime>true</sortByTime>
+      </format>
+    </appender>
+
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="LOKI"/>
+    </root>
+  </springProfile>
+
+  <springProfile name="observability-cloud">
+    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+      <http>
+        <url>${lokiUrl}</url>
+        <auth>
+          <username>${lokiUsername}</username>
+          <password>${lokiPassword}</password>
+        </auth>
+      </http>
+      <format>
+        <label>
+          <pattern>application=${appName},environment=${environment},host=${HOSTNAME:-cloud}</pattern>
+          <readMarkers>true</readMarkers>
+        </label>
+        <message>
+          <pattern>%message</pattern>
+        </message>
+        <sortByTime>true</sortByTime>
+      </format>
+    </appender>
+
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="LOKI"/>
+    </root>
+  </springProfile>
+</configuration>
