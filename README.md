@@ -116,7 +116,7 @@ Configurar em `Settings > Secrets and variables > Actions`:
 - `NETLIFY_AUTH_TOKEN`
 - `NETLIFY_SITE_ID`
 - `RENDER_DEPLOY_HOOK_URL`
-- `API_BASE_URL` ou `API_URL` (URL pública do backend no Render, ex.: `https://seu-backend.onrender.com`)
+- `API_BASE_URL` (URL pública do backend no Render, ex.: `https://seu-backend.onrender.com`)
 
 ### 2) Frontend no Netlify
 
@@ -259,14 +259,8 @@ Observação:
 
 ## API_BASE_URL no Frontend
 
-O frontend usa `API_BASE_URL` no build e aceita `API_URL` como compatibilidade.
-Se nenhuma das duas existir, ele faz fallback para `http://localhost:8080`.
-
-Importante:
-
-- o build de produção do frontend acontece no GitHub Actions
-- portanto `API_BASE_URL` ou `API_URL` deve existir em `Settings > Secrets and variables > Actions`
-- definir a variável apenas no painel do Netlify não altera o bundle gerado por esse workflow
+O frontend agora usa `API_BASE_URL` no build.  
+Se a variável não existir, ele faz fallback para `http://localhost:8080`.
 
 ## Migrações (Flyway)
 

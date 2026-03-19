@@ -27,14 +27,13 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         env:
-          API_BASE_URL: ${{ secrets.API_BASE_URL || secrets.API_URL }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
         run: npm run build
 
       - name: Validate Netlify secrets
         run: |
           test -n "${{ secrets.NETLIFY_AUTH_TOKEN }}" || (echo "NETLIFY_AUTH_TOKEN não definido" && exit 1)
           test -n "${{ secrets.NETLIFY_SITE_ID }}" || (echo "NETLIFY_SITE_ID não definido" && exit 1)
-          test -n "${{ secrets.API_BASE_URL || secrets.API_URL }}" || (echo "API_BASE_URL/API_URL não definido" && exit 1)
 
       - name: Deploy to Netlify
         run: npx netlify-cli deploy --dir=frontend/dist/frontend/browser --prod --site="${{ secrets.NETLIFY_SITE_ID }}" --auth="${{ secrets.NETLIFY_AUTH_TOKEN }}"
