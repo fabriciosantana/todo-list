@@ -3,6 +3,7 @@ package com.todo.app.application.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,10 +15,13 @@ import com.todo.app.domain.repository.TaskRepository;
 import com.todo.app.domain.repository.UserRepository;
 import com.todo.app.web.dto.TaskRequest;
 import com.todo.app.web.dto.TaskResponse;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -76,5 +80,28 @@ class TaskServiceTest {
 
     assertTrue(archived.archived());
     assertFalse(restored.archived());
+  }
+
+  @Test
+  void shouldFindTasksUsingRequestedSort() {
+    Task task = new Task();
+    task.setTitle("Buscar tarefa");
+    task.setStatus(TaskStatus.FAZENDO);
+    task.setArchived(false);
+
+    when(taskRepository.findAll(anySpecification(), eq(Sort.by(Sort.Direction.ASC, "title"))))
+        .thenReturn(List.of(task));
+
+    List<TaskResponse> response =
+        taskService.findAllByOwner(1L, false, "buscar", TaskStatus.FAZENDO, "title", "asc");
+
+    assertEquals(1, response.size());
+    assertEquals("Buscar tarefa", response.getFirst().title());
+    verify(taskRepository).findAll(anySpecification(), eq(Sort.by(Sort.Direction.ASC, "title")));
+  }
+
+  @SuppressWarnings("unchecked")
+  private Specification<Task> anySpecification() {
+    return any(Specification.class);
   }
 }

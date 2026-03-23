@@ -2,7 +2,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from './core/auth.service';
-import { TaskService } from './core/task.service';
+import { TaskListQuery, TaskService } from './core/task.service';
 import { Task, TaskRequest, TaskStatus, User } from './models/types';
 
 interface StatusOption {
@@ -39,6 +39,14 @@ export class App implements OnInit {
   taskScope: TaskScope = 'active';
   draggedTaskId: number | null = null;
   dragOverColumn: TaskStatus | null = null;
+  filterState: Required<Pick<TaskListQuery, 'search' | 'sortBy' | 'sortDirection'>> & { statuses: TaskStatus[] } = {
+    search: '',
+    statuses: [],
+    sortBy: 'createdAt',
+    sortDirection: 'desc'
+  };
+  searchFilterOpen = false;
+  statusFilterOpen = false;
   notice: { type: NoticeType; message: string } | null = null;
   noticeCountdown = 0;
   loading = false;
@@ -86,6 +94,57 @@ export class App implements OnInit {
       this.viewMode = 'table';
     }
     this.loadTasks();
+  }
+
+  updateSearchTerm(value: string): void {
+    this.filterState.search = value;
+    this.loadTasks();
+  }
+
+  toggleSearchFilterMenu(): void {
+    this.searchFilterOpen = !this.searchFilterOpen;
+  }
+
+  toggleStatusFilterMenu(): void {
+    this.statusFilterOpen = !this.statusFilterOpen;
+  }
+
+  toggleStatusSelection(status: TaskStatus): void {
+    if (this.filterState.statuses.includes(status)) {
+      this.filterState.statuses = this.filterState.statuses.filter((value) => value !== status);
+    } else {
+      this.filterState.statuses = [...this.filterState.statuses, status];
+    }
+
+    this.loadTasks();
+  }
+
+  clearStatusFilter(): void {
+    this.filterState.statuses = [];
+    this.loadTasks();
+  }
+
+  toggleSort(value: NonNullable<TaskListQuery['sortBy']>): void {
+    if (this.filterState.sortBy === value) {
+      this.filterState.sortDirection = this.filterState.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.filterState.sortBy = value;
+      this.filterState.sortDirection = value === 'title' ? 'asc' : 'desc';
+    }
+
+    this.loadTasks();
+  }
+
+  sortIndicator(value: NonNullable<TaskListQuery['sortBy']>): string {
+    if (this.filterState.sortBy !== value) {
+      return '';
+    }
+
+    return this.filterState.sortDirection === 'asc' ? '↑' : '↓';
+  }
+
+  isStatusSelected(status: TaskStatus): boolean {
+    return this.filterState.statuses.includes(status);
   }
 
   submitAuth(): void {
@@ -143,7 +202,10 @@ export class App implements OnInit {
   }
 
   loadTasks(): void {
-    this.taskService.list(false).subscribe({
+    const activeQuery = this.buildTaskQuery();
+    const archivedQuery = this.buildTaskQuery();
+
+    this.taskService.list(false, activeQuery).subscribe({
       next: (tasks) => {
         this.tasks = tasks;
       },
@@ -153,7 +215,7 @@ export class App implements OnInit {
       }
     });
 
-    this.taskService.list(true).subscribe({
+    this.taskService.list(true, archivedQuery).subscribe({
       next: (tasks) => {
         this.archivedTasks = tasks;
       },
@@ -175,9 +237,9 @@ export class App implements OnInit {
     };
 
     this.taskService.create(payload).subscribe({
-      next: (task) => {
-        this.tasks = [task, ...this.tasks];
+      next: () => {
         this.taskForm.reset({ title: '', status: 'A_FAZER' });
+        this.loadTasks();
       },
       error: () => {
         this.showNotice('error', 'Não foi possível criar a tarefa.');
@@ -210,8 +272,8 @@ export class App implements OnInit {
 
   toggleTaskDone(task: Task): void {
     this.taskService.toggle(task.id).subscribe({
-      next: (updated) => {
-        this.tasks = this.tasks.map((item) => (item.id === task.id ? updated : item));
+      next: () => {
+        this.loadTasks();
       },
       error: () => {
         this.showNotice('error', 'Não foi possível atualizar o status da tarefa.');
@@ -221,9 +283,8 @@ export class App implements OnInit {
 
   archiveTask(taskId: number): void {
     this.taskService.archive(taskId).subscribe({
-      next: (updated) => {
-        this.tasks = this.tasks.filter((task) => task.id !== taskId);
-        this.archivedTasks = [updated, ...this.archivedTasks.filter((task) => task.id !== taskId)];
+      next: () => {
+        this.loadTasks();
         this.showNotice('success', 'Tarefa arquivada.');
       },
       error: () => {
@@ -234,9 +295,8 @@ export class App implements OnInit {
 
   unarchiveTask(taskId: number): void {
     this.taskService.unarchive(taskId).subscribe({
-      next: (updated) => {
-        this.archivedTasks = this.archivedTasks.filter((task) => task.id !== taskId);
-        this.tasks = [updated, ...this.tasks.filter((task) => task.id !== taskId)];
+      next: () => {
+        this.loadTasks();
         this.showNotice('success', 'Tarefa desarquivada.');
       },
       error: () => {
@@ -261,8 +321,7 @@ export class App implements OnInit {
 
     this.taskService.delete(task.id).subscribe({
       next: () => {
-        this.tasks = this.tasks.filter((item) => item.id !== task.id);
-        this.archivedTasks = this.archivedTasks.filter((item) => item.id !== task.id);
+        this.loadTasks();
         this.showNotice('success', 'Tarefa removida permanentemente.');
       },
       error: () => {
@@ -276,9 +335,7 @@ export class App implements OnInit {
   }
 
   tasksByStatus(status: TaskStatus): Task[] {
-    return this.tasks
-      .filter((task) => task.status === status)
-      .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+    return this.tasks.filter((task) => task.status === status);
   }
 
   statusLabel(status: TaskStatus): string {
@@ -360,19 +417,22 @@ export class App implements OnInit {
 
   private updateTask(task: Task, payload: TaskRequest, errorMessage: string): void {
     this.taskService.update(task.id, payload).subscribe({
-      next: (updated) => {
-        if (updated.archived) {
-          this.tasks = this.tasks.filter((item) => item.id !== task.id);
-          this.archivedTasks = [updated, ...this.archivedTasks.filter((item) => item.id !== task.id)];
-          return;
-        }
-
-        this.tasks = this.tasks.map((item) => (item.id === task.id ? updated : item));
+      next: () => {
+        this.loadTasks();
       },
       error: () => {
         this.showNotice('error', errorMessage);
       }
     });
+  }
+
+  private buildTaskQuery(): TaskListQuery {
+    return {
+      search: this.filterState.search,
+      statuses: this.filterState.statuses,
+      sortBy: this.filterState.sortBy,
+      sortDirection: this.filterState.sortDirection
+    };
   }
 
   clearNotice(): void {

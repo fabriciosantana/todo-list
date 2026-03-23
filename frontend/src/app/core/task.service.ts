@@ -1,8 +1,15 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Task, TaskRequest } from '../models/types';
 import { runtimeConfig } from '../config/runtime-config';
+
+export interface TaskListQuery {
+  search?: string;
+  statuses?: Task['status'][];
+  sortBy?: 'createdAt' | 'updatedAt' | 'title';
+  sortDirection?: 'asc' | 'desc';
+}
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
@@ -10,11 +17,22 @@ export class TaskService {
 
   constructor(private readonly http: HttpClient) {}
 
-  list(archived = false): Observable<Task[]> {
+  list(archived = false, query: TaskListQuery = {}): Observable<Task[]> {
+    let params = new HttpParams()
+      .set('archived', String(archived))
+      .set('sortBy', query.sortBy ?? 'createdAt')
+      .set('sortDirection', query.sortDirection ?? 'desc');
+
+    if (query.search?.trim()) {
+      params = params.set('search', query.search.trim());
+    }
+
+    for (const status of query.statuses ?? []) {
+      params = params.append('status', status);
+    }
+
     return this.http.get<Task[]>(this.apiBase, {
-      params: {
-        archived: String(archived)
-      }
+      params
     });
   }
 

@@ -100,10 +100,108 @@ describe('App', () => {
     fixture.detectChanges();
 
     expect(app.currentUser).toEqual(user);
-    expect(taskServiceSpy.list).toHaveBeenCalledWith(false);
-    expect(taskServiceSpy.list).toHaveBeenCalledWith(true);
+    expect(taskServiceSpy.list).toHaveBeenCalledWith(false, {
+      search: '',
+      statuses: [],
+      sortBy: 'createdAt',
+      sortDirection: 'desc'
+    });
+    expect(taskServiceSpy.list).toHaveBeenCalledWith(true, {
+      search: '',
+      statuses: [],
+      sortBy: 'createdAt',
+      sortDirection: 'desc'
+    });
     expect(app.tasks).toEqual([activeTask]);
     expect(app.archivedTasks).toEqual([archivedTask]);
+  });
+
+  it('should reload tasks when search, status filter or sorting changes', () => {
+    authServiceSpy.getUser.and.returnValue(user);
+    authServiceSpy.isAuthenticated.and.returnValue(true);
+
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+
+    fixture.detectChanges();
+    taskServiceSpy.list.calls.reset();
+
+    app.updateSearchTerm('cobrir');
+    app.toggleStatusSelection('FAZENDO');
+    app.toggleStatusSelection('CONCLUIDO');
+    app.toggleSort('title');
+
+    expect(taskServiceSpy.list).toHaveBeenCalledWith(false, {
+      search: 'cobrir',
+      statuses: ['FAZENDO', 'CONCLUIDO'],
+      sortBy: 'title',
+      sortDirection: 'asc'
+    });
+    expect(taskServiceSpy.list).toHaveBeenCalledWith(true, {
+      search: 'cobrir',
+      statuses: ['FAZENDO', 'CONCLUIDO'],
+      sortBy: 'title',
+      sortDirection: 'asc'
+    });
+  });
+
+  it('should invert sort direction when clicking the same table header twice', () => {
+    authServiceSpy.getUser.and.returnValue(user);
+    authServiceSpy.isAuthenticated.and.returnValue(true);
+
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+
+    fixture.detectChanges();
+    taskServiceSpy.list.calls.reset();
+
+    app.toggleSort('createdAt');
+
+    expect(taskServiceSpy.list).toHaveBeenCalledWith(false, {
+      search: '',
+      statuses: [],
+      sortBy: 'createdAt',
+      sortDirection: 'asc'
+    });
+    expect(taskServiceSpy.list).toHaveBeenCalledWith(true, {
+      search: '',
+      statuses: [],
+      sortBy: 'createdAt',
+      sortDirection: 'asc'
+    });
+  });
+
+  it('should allow selecting and clearing multiple statuses for filtering', () => {
+    authServiceSpy.getUser.and.returnValue(user);
+    authServiceSpy.isAuthenticated.and.returnValue(true);
+
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+
+    fixture.detectChanges();
+    taskServiceSpy.list.calls.reset();
+
+    app.toggleStatusSelection('A_FAZER');
+    app.toggleStatusSelection('FAZENDO');
+
+    expect(app.filterState.statuses).toEqual(['A_FAZER', 'FAZENDO']);
+    expect(taskServiceSpy.list).toHaveBeenCalledWith(false, {
+      search: '',
+      statuses: ['A_FAZER', 'FAZENDO'],
+      sortBy: 'createdAt',
+      sortDirection: 'desc'
+    });
+
+    taskServiceSpy.list.calls.reset();
+    app.clearStatusFilter();
+
+    expect(app.filterState.statuses).toEqual([]);
+    expect(taskServiceSpy.list).toHaveBeenCalledWith(false, {
+      search: '',
+      statuses: [],
+      sortBy: 'createdAt',
+      sortDirection: 'desc'
+    });
   });
 
   it('should register a user and load tasks', () => {
@@ -169,13 +267,13 @@ describe('App', () => {
   it('should create a task and prepend it to the active list', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
-    app.tasks = [{ ...activeTask, id: 9, title: 'Existente' }];
+    spyOn(app, 'loadTasks');
     app.taskForm.setValue({ title: 'Cobrir serviços', status: 'A_FAZER' });
 
     app.createTask();
 
     expect(taskServiceSpy.create).toHaveBeenCalledWith({ title: 'Cobrir serviços', status: 'A_FAZER' });
-    expect(app.tasks[0]).toEqual(activeTask);
+    expect(app.loadTasks).toHaveBeenCalled();
     expect(app.taskForm.value.title).toBe('');
     expect(app.taskForm.value.status).toBe('A_FAZER');
   });
@@ -183,41 +281,37 @@ describe('App', () => {
   it('should move task to archived list when archiving', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
-    app.tasks = [activeTask];
-    app.archivedTasks = [];
+    spyOn(app, 'loadTasks');
 
     app.archiveTask(activeTask.id);
 
     expect(taskServiceSpy.archive).toHaveBeenCalledWith(activeTask.id);
-    expect(app.tasks).toEqual([]);
-    expect(app.archivedTasks).toEqual([archivedTask]);
+    expect(app.loadTasks).toHaveBeenCalled();
     expect(app.notice).toEqual({ type: 'success', message: 'Tarefa arquivada.' });
   });
 
   it('should toggle a task to done', () => {
     const doneTask: Task = { ...activeTask, status: 'CONCLUIDO' };
-    taskServiceSpy.toggle.and.returnValue(of(doneTask));
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
-    app.tasks = [activeTask];
+    spyOn(app, 'loadTasks');
 
     app.toggleTaskDone(activeTask);
 
     expect(taskServiceSpy.toggle).toHaveBeenCalledWith(activeTask.id);
-    expect(app.tasks[0].status).toBe('CONCLUIDO');
+    expect(app.loadTasks).toHaveBeenCalled();
   });
 
   it('should toggle a done task back to pending', () => {
     const doneTask: Task = { ...activeTask, status: 'CONCLUIDO' };
-    taskServiceSpy.toggle.and.returnValue(of(activeTask));
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
-    app.tasks = [doneTask];
+    spyOn(app, 'loadTasks');
 
     app.toggleTaskDone(doneTask);
 
     expect(taskServiceSpy.toggle).toHaveBeenCalledWith(doneTask.id);
-    expect(app.tasks[0].status).toBe('A_FAZER');
+    expect(app.loadTasks).toHaveBeenCalled();
   });
 
   it('should require archived task before deletion', () => {
@@ -250,23 +344,21 @@ describe('App', () => {
   it('should delete archived task after confirmation', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
-    app.tasks = [activeTask];
-    app.archivedTasks = [archivedTask];
+    spyOn(app, 'loadTasks');
     spyOn(window, 'confirm').and.returnValue(true);
 
     app.deleteTask(archivedTask);
 
     expect(taskServiceSpy.delete).toHaveBeenCalledWith(archivedTask.id);
-    expect(app.archivedTasks).toEqual([]);
+    expect(app.loadTasks).toHaveBeenCalled();
     expect(app.notice).toEqual({ type: 'success', message: 'Tarefa removida permanentemente.' });
   });
 
   it('should update status via drag and drop when target column changes', () => {
-    const updatedTask: Task = { ...activeTask, status: 'FAZENDO' };
-    taskServiceSpy.update.and.returnValue(of(updatedTask));
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     app.tasks = [activeTask];
+    spyOn(app, 'loadTasks');
 
     app.startTaskDrag(activeTask);
     app.dropTaskOnColumn('FAZENDO');
@@ -275,7 +367,7 @@ describe('App', () => {
       title: activeTask.title,
       status: 'FAZENDO'
     });
-    expect(app.tasks).toEqual([updatedTask]);
+    expect(app.loadTasks).toHaveBeenCalled();
     expect(app.draggedTaskId).toBeNull();
     expect(app.dragOverColumn).toBeNull();
   });

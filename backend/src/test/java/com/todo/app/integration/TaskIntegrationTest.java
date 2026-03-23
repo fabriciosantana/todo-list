@@ -87,6 +87,16 @@ class TaskIntegrationTest extends AbstractPostgresContainerTest {
         .andExpect(jsonPath("$", hasSize(1)))
         .andExpect(jsonPath("$[0].id").value(taskId));
 
+    mockMvc.perform(get("/api/tasks")
+            .param("search", "cobrir")
+            .param("status", "A_FAZER")
+            .param("sortBy", "title")
+            .param("sortDirection", "asc")
+            .header(HttpHeaders.AUTHORIZATION, bearer(token)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$", hasSize(1)))
+        .andExpect(jsonPath("$[0].title").value("Cobrir integração"));
+
     mockMvc.perform(patch("/api/tasks/{id}/archive", taskId)
             .header(HttpHeaders.AUTHORIZATION, bearer(token)))
         .andExpect(status().isOk())

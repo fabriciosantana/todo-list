@@ -285,19 +285,22 @@ Exemplo:
 1. Cadastrar usuário.
 2. Fazer login.
 3. Criar tarefa escolhendo o status inicial (`A Fazer`, `Fazendo` ou `Concluído`).
-4. Alternar entre visão em tabela e visão kanban.
-5. No kanban, mover tarefas entre colunas por drag and drop ou pelo seletor de status.
-6. Arquivar tarefas para removê-las da lista ativa.
-7. Abrir a visão `Arquivadas` para consultar e desarquivar tarefas.
-8. Excluir definitivamente apenas tarefas arquivadas, com confirmação explícita.
-9. Observar mensagens de sucesso/erro com fechamento manual e expiração automática em 5 segundos.
-10. Fazer logout e logar com outra conta para validar isolamento multiusuário.
+4. Clicar na lupa do header da coluna `Tarefa` para buscar por título, abrir o filtro no header da coluna `Status` para selecionar zero, um ou múltiplos status, e ordenar clicando nos headers da tabela.
+5. Alternar entre visão em tabela e visão kanban.
+6. No kanban, mover tarefas entre colunas por drag and drop ou pelo seletor de status.
+7. Arquivar tarefas para removê-las da lista ativa.
+8. Abrir a visão `Arquivadas` para consultar e desarquivar tarefas.
+9. Excluir definitivamente apenas tarefas arquivadas, com confirmação explícita.
+10. Observar mensagens de sucesso/erro com fechamento manual e expiração automática em 5 segundos.
+11. Fazer logout e logar com outra conta para validar isolamento multiusuário.
 
 ## Regras Funcionais Atuais
 
 - Cada tarefa possui um status: `A_FAZER`, `FAZENDO` ou `CONCLUIDO`.
 - A listagem principal trabalha apenas com tarefas ativas.
 - A interface possui dois filtros de escopo: `Ativas` e `Arquivadas`.
+- A listagem aceita busca textual por título a partir da lupa no header da coluna `Tarefa`.
+- A listagem aceita filtro multi-status diretamente no header da coluna `Status` e ordenação por `createdAt`, `updatedAt` e `title` via clique nos headers da tabela.
 - Tarefas arquivadas podem ser desarquivadas e voltam para a lista ativa.
 - A exclusão permanente só é permitida para tarefas arquivadas.
 - O kanban suporta mudança de status por arrastar e soltar.
