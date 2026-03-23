@@ -1,6 +1,7 @@
 package com.todo.app.web.controller;
 
 import com.todo.app.application.service.TaskService;
+import com.todo.app.domain.model.TaskStatus;
 import com.todo.app.domain.model.User;
 import com.todo.app.web.dto.TaskRequest;
 import com.todo.app.web.dto.TaskResponse;
@@ -31,9 +32,14 @@ public class TaskController {
   }
 
   @GetMapping
-  public List<TaskResponse> list(@AuthenticationPrincipal User currentUser,
-      @RequestParam(defaultValue = "false") boolean archived) {
-    return taskService.findAllByOwner(currentUser.getId(), archived);
+  public List<TaskResponse> list(
+      @AuthenticationPrincipal User currentUser,
+      @RequestParam(defaultValue = "false") boolean archived,
+      @RequestParam(required = false) String search,
+      @RequestParam(required = false) List<TaskStatus> status,
+      @RequestParam(defaultValue = "createdAt") String sortBy,
+      @RequestParam(defaultValue = "desc") String sortDirection) {
+    return taskService.findAllByOwner(currentUser.getId(), archived, search, status, sortBy, sortDirection);
   }
 
   @PostMapping

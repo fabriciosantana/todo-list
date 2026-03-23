@@ -8,10 +8,14 @@ import com.todo.app.domain.repository.UserRepository;
 import com.todo.app.web.dto.TaskRequest;
 import com.todo.app.web.dto.TaskResponse;
 import io.micrometer.observation.annotation.Observed;
+import jakarta.persistence.criteria.Predicate;
 import java.util.List;
+import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,8 +35,16 @@ public class TaskService {
 
   @Transactional(readOnly = true)
   @Observed(name = "todo.tasks.find-all", contextualName = "tasks-find-all")
-  public List<TaskResponse> findAllByOwner(Long ownerId, boolean archived) {
-    return taskRepository.findAllByOwnerIdAndArchivedOrderByCreatedAtDesc(ownerId, archived)
+  public List<TaskResponse> findAllByOwner(
+      Long ownerId,
+      boolean archived,
+      String search,
+      List<TaskStatus> statuses,
+      String sortBy,
+      String sortDirection) {
+    return taskRepository.findAll(
+            buildTaskSpecification(ownerId, archived, search, statuses),
+            buildSort(sortBy, sortDirection))
         .stream()
         .map(this::toResponse)
         .toList();
@@ -125,5 +137,49 @@ public class TaskService {
 
   private TaskStatus resolveStatus(TaskStatus status) {
     return status == null ? TaskStatus.A_FAZER : status;
+  }
+
+  private Specification<Task> buildTaskSpecification(
+      Long ownerId,
+      boolean archived,
+      String search,
+      List<TaskStatus> statuses) {
+    return (root, query, criteriaBuilder) -> {
+      Predicate predicate = criteriaBuilder.and(
+          criteriaBuilder.equal(root.get("owner").get("id"), ownerId),
+          criteriaBuilder.equal(root.get("archived"), archived));
+
+      if (search != null && !search.isBlank()) {
+        predicate = criteriaBuilder.and(
+            predicate,
+            criteriaBuilder.like(
+                criteriaBuilder.lower(root.get("title")),
+                "%" + search.trim().toLowerCase(Locale.ROOT) + "%"));
+      }
+
+      if (statuses != null && !statuses.isEmpty()) {
+        predicate = criteriaBuilder.and(predicate, root.get("status").in(statuses));
+      }
+
+      return predicate;
+    };
+  }
+
+  private Sort buildSort(String sortBy, String sortDirection) {
+    Sort.Direction direction = "asc".equalsIgnoreCase(sortDirection) ? Sort.Direction.ASC : Sort.Direction.DESC;
+    return Sort.by(direction, resolveSortProperty(sortBy));
+  }
+
+  private String resolveSortProperty(String sortBy) {
+    if (sortBy == null) {
+      return "createdAt";
+    }
+
+    return switch (sortBy) {
+      case "updatedAt" -> "updatedAt";
+      case "title" -> "title";
+      case "createdAt" -> "createdAt";
+      default -> "createdAt";
+    };
   }
 }
