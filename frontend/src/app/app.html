@@ -97,21 +97,79 @@
               @if (taskScope === 'active' && tasks.length === 0) {
                 <div class="empty-state">
                   <h2 class="h5 mb-2">Nenhuma tarefa ativa</h2>
-                  <p class="text-muted mb-0">Crie a primeira tarefa para começar a organizar o fluxo.</p>
+                  <p class="text-muted mb-0">Ajuste busca, filtros ou crie uma nova tarefa para começar a organizar o fluxo.</p>
                 </div>
               } @else if (taskScope === 'archived' && archivedTasks.length === 0) {
                 <div class="empty-state">
                   <h2 class="h5 mb-2">Nenhuma tarefa arquivada</h2>
-                  <p class="text-muted mb-0">Arquive tarefas concluídas para escondê-las da lista principal.</p>
+                  <p class="text-muted mb-0">Ajuste busca, filtros ou arquive tarefas concluídas para escondê-las da lista principal.</p>
                 </div>
               } @else if (taskScope === 'archived') {
                 <div class="table-responsive task-table-wrap">
                   <table class="table align-middle task-table mb-0">
                     <thead>
                       <tr>
-                        <th>Tarefa</th>
-                        <th>Status</th>
-                        <th>Arquivada</th>
+                        <th>
+                          <div class="column-filter">
+                            <button class="sort-header" type="button" data-testid="sort-archived-title" (click)="toggleSort('title')">
+                              <span>Tarefa</span>
+                              <span class="sort-header__icons" aria-hidden="true">
+                                <svg class="sort-header__hint" viewBox="0 0 16 16"><path d="M8 3 4.5 6.5h7L8 3Zm0 10 3.5-3.5h-7L8 13Z"/></svg>
+                                <span class="sort-header__state">{{ sortIndicator('title') }}</span>
+                              </span>
+                            </button>
+                            <button class="column-filter__trigger" type="button" data-testid="task-search-trigger-archived" (click)="toggleSearchFilterMenu()">
+                              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.2 10.5 14.7 14l-.7.7-3.5-3.5a5 5 0 1 1 .7-.7ZM6.5 11a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z"/></svg>
+                            </button>
+                            @if (searchFilterOpen) {
+                              <div class="column-filter__menu" data-testid="task-search-menu">
+                                <label class="column-filter__field">
+                                  <span>Buscar por título</span>
+                                  <input
+                                    data-testid="task-search-input"
+                                    type="search"
+                                    class="form-control form-control-sm"
+                                    [value]="filterState.search"
+                                    placeholder="Digite um termo"
+                                    (input)="updateSearchTerm($any($event.target).value)"
+                                  />
+                                </label>
+                              </div>
+                            }
+                          </div>
+                        </th>
+                        <th>
+                          <div class="column-filter">
+                            <span>Status</span>
+                            <button class="column-filter__trigger" type="button" data-testid="status-filter-trigger-archived" (click)="toggleStatusFilterMenu()">
+                              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12l-4.5 5.25V13l-3-1.6V8.25L2 3Z"/></svg>
+                            </button>
+                            @if (statusFilterOpen) {
+                              <div class="column-filter__menu" data-testid="status-filter-menu">
+                                @for (option of statusOptions; track option.value) {
+                                  <label class="column-filter__option">
+                                    <input
+                                      type="checkbox"
+                                      [checked]="isStatusSelected(option.value)"
+                                      (change)="toggleStatusSelection(option.value)"
+                                    />
+                                    <span>{{ option.label }}</span>
+                                  </label>
+                                }
+                                <button class="btn btn-link btn-sm p-0 text-decoration-none" type="button" (click)="clearStatusFilter()">Limpar filtro</button>
+                              </div>
+                            }
+                          </div>
+                        </th>
+                        <th>
+                          <button class="sort-header" type="button" data-testid="sort-archived-updated" (click)="toggleSort('updatedAt')">
+                            <span>Arquivada</span>
+                            <span class="sort-header__icons" aria-hidden="true">
+                              <svg class="sort-header__hint" viewBox="0 0 16 16"><path d="M8 3 4.5 6.5h7L8 3Zm0 10 3.5-3.5h-7L8 13Z"/></svg>
+                              <span class="sort-header__state">{{ sortIndicator('updatedAt') }}</span>
+                            </span>
+                          </button>
+                        </th>
                         <th class="text-end">Ações</th>
                       </tr>
                     </thead>
@@ -144,19 +202,83 @@
                   <table class="table align-middle task-table mb-0">
                     <thead>
                       <tr>
-                        <th>Tarefa</th>
-                        <th>Status</th>
-                        <th>Criada em</th>
+                        <th>
+                          <div class="column-filter">
+                            <button class="sort-header" type="button" data-testid="sort-active-title" (click)="toggleSort('title')">
+                              <span>Tarefa</span>
+                              <span class="sort-header__icons" aria-hidden="true">
+                                <svg class="sort-header__hint" viewBox="0 0 16 16"><path d="M8 3 4.5 6.5h7L8 3Zm0 10 3.5-3.5h-7L8 13Z"/></svg>
+                                <span class="sort-header__state">{{ sortIndicator('title') }}</span>
+                              </span>
+                            </button>
+                            <button class="column-filter__trigger" type="button" data-testid="task-search-trigger-active" (click)="toggleSearchFilterMenu()">
+                              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.2 10.5 14.7 14l-.7.7-3.5-3.5a5 5 0 1 1 .7-.7ZM6.5 11a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z"/></svg>
+                            </button>
+                            @if (searchFilterOpen) {
+                              <div class="column-filter__menu" data-testid="task-search-menu">
+                                <label class="column-filter__field">
+                                  <span>Buscar por título</span>
+                                  <input
+                                    data-testid="task-search-input"
+                                    type="search"
+                                    class="form-control form-control-sm"
+                                    [value]="filterState.search"
+                                    placeholder="Digite um termo"
+                                    (input)="updateSearchTerm($any($event.target).value)"
+                                  />
+                                </label>
+                              </div>
+                            }
+                          </div>
+                        </th>
+                        <th>
+                          <div class="column-filter">
+                            <span>Status</span>
+                            <button class="column-filter__trigger" type="button" data-testid="status-filter-trigger-active" (click)="toggleStatusFilterMenu()">
+                              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12l-4.5 5.25V13l-3-1.6V8.25L2 3Z"/></svg>
+                            </button>
+                            @if (statusFilterOpen) {
+                              <div class="column-filter__menu" data-testid="status-filter-menu">
+                                @for (option of statusOptions; track option.value) {
+                                  <label class="column-filter__option">
+                                    <input
+                                      type="checkbox"
+                                      [checked]="isStatusSelected(option.value)"
+                                      (change)="toggleStatusSelection(option.value)"
+                                    />
+                                    <span>{{ option.label }}</span>
+                                  </label>
+                                }
+                                <button class="btn btn-link btn-sm p-0 text-decoration-none" type="button" (click)="clearStatusFilter()">Limpar filtro</button>
+                              </div>
+                            }
+                          </div>
+                        </th>
+                        <th>
+                          <button class="sort-header" type="button" data-testid="sort-active-created" (click)="toggleSort('createdAt')">
+                            <span>Criada em</span>
+                            <span class="sort-header__icons" aria-hidden="true">
+                              <svg class="sort-header__hint" viewBox="0 0 16 16"><path d="M8 3 4.5 6.5h7L8 3Zm0 10 3.5-3.5h-7L8 13Z"/></svg>
+                              <span class="sort-header__state">{{ sortIndicator('createdAt') }}</span>
+                            </span>
+                          </button>
+                        </th>
+                        <th>
+                          <button class="sort-header" type="button" data-testid="sort-active-updated" (click)="toggleSort('updatedAt')">
+                            <span>Atualizada em</span>
+                            <span class="sort-header__icons" aria-hidden="true">
+                              <svg class="sort-header__hint" viewBox="0 0 16 16"><path d="M8 3 4.5 6.5h7L8 3Zm0 10 3.5-3.5h-7L8 13Z"/></svg>
+                              <span class="sort-header__state">{{ sortIndicator('updatedAt') }}</span>
+                            </span>
+                          </button>
+                        </th>
                         <th class="text-end">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
                       @for (task of tasks; track trackByTaskId($index, task)) {
                         <tr [attr.data-testid]="'task-row-' + task.id">
-                          <td>
-                            <div class="fw-semibold">{{ task.title }}</div>
-                            <small class="text-muted">Atualizada em {{ task.updatedAt | date:'dd/MM/yyyy HH:mm' }}</small>
-                          </td>
+                          <td><div class="fw-semibold">{{ task.title }}</div></td>
                           <td>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                               <span class="badge rounded-pill" [class]="statusBadgeClass(task.status)">{{ statusLabel(task.status) }}</span>
@@ -168,6 +290,7 @@
                             </div>
                           </td>
                           <td>{{ task.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                          <td>{{ task.updatedAt | date:'dd/MM/yyyy HH:mm' }}</td>
                           <td class="text-end">
                             <div class="btn-group btn-group-sm icon-actions">
                               <button class="btn btn-outline-success" [class.active]="task.status === 'CONCLUIDO'" (click)="toggleTaskDone(task)" [title]="task.status === 'CONCLUIDO' ? 'Marcar como pendente' : 'Marcar como concluída'" [attr.aria-label]="task.status === 'CONCLUIDO' ? 'Marcar como pendente' : 'Marcar como concluída'">

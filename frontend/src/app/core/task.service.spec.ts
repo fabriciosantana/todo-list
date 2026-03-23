@@ -34,7 +34,10 @@ describe('TaskService', () => {
     service.list().subscribe();
 
     const request = httpMock.expectOne((req) =>
-      req.url === 'http://localhost:8080/api/tasks' && req.params.get('archived') === 'false'
+      req.url === 'http://localhost:8080/api/tasks' &&
+      req.params.get('archived') === 'false' &&
+      req.params.get('sortBy') === 'createdAt' &&
+      req.params.get('sortDirection') === 'desc'
     );
 
     expect(request.request.method).toBe('GET');
@@ -45,7 +48,33 @@ describe('TaskService', () => {
     service.list(true).subscribe();
 
     const request = httpMock.expectOne((req) =>
-      req.url === 'http://localhost:8080/api/tasks' && req.params.get('archived') === 'true'
+      req.url === 'http://localhost:8080/api/tasks' &&
+      req.params.get('archived') === 'true' &&
+      req.params.get('sortBy') === 'createdAt' &&
+      req.params.get('sortDirection') === 'desc'
+    );
+
+    expect(request.request.method).toBe('GET');
+    request.flush([task]);
+  });
+
+  it('should include search, status and custom sort params when listing tasks', () => {
+    service
+      .list(false, {
+        search: 'implementar',
+        statuses: ['FAZENDO', 'CONCLUIDO'],
+        sortBy: 'title',
+        sortDirection: 'asc'
+      })
+      .subscribe();
+
+    const request = httpMock.expectOne((req) =>
+      req.url === 'http://localhost:8080/api/tasks' &&
+      req.params.get('archived') === 'false' &&
+      req.params.get('search') === 'implementar' &&
+      req.params.getAll('status')?.join(',') === 'FAZENDO,CONCLUIDO' &&
+      req.params.get('sortBy') === 'title' &&
+      req.params.get('sortDirection') === 'asc'
     );
 
     expect(request.request.method).toBe('GET');
